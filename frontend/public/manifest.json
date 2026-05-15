@@ -1,0 +1,27 @@
+{
+  "short_name": "B4B",
+  "name": "Blogs 4 Blocks",
+  "description": "A global open forum for marketing professionals to share strategies and insights from every corner of the world.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0F172A",
+  "background_color": "#FFFFFF",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["business", "education", "social"],
+  "lang": "en"
+}

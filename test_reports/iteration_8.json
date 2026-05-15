@@ -1,0 +1,138 @@
+{
+  "summary": "Completed comprehensive testing of Weekly Digest feature for Blogs 4 Blocks. Fixed routing issue with DELETE /api/admin/posts/expired-guests endpoint. All 19 backend tests passed. Admin Newsletter UI tab fully verified with Send Digest functionality working correctly.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "POST /api/newsletter/subscribe - new email subscribes successfully - PASS",
+    "POST /api/newsletter/subscribe - already subscribed email handled correctly - PASS",
+    "POST /api/newsletter/unsubscribe - email unsubscribes successfully - PASS",
+    "POST /api/newsletter/unsubscribe - non-existent email handled gracefully - PASS",
+    "POST /api/newsletter/subscribe - resubscription after unsubscribe works - PASS",
+    "GET /api/admin/digest-status - requires authentication (401) - PASS",
+    "GET /api/admin/digest-status - requires admin role (403) - PASS",
+    "GET /api/admin/digest-status - returns subscriber count, last digest, schedule info - PASS",
+    "GET /api/admin/digest-status - shows last digest info when available - PASS",
+    "POST /api/admin/send-digest - requires authentication (401) - PASS",
+    "POST /api/admin/send-digest - requires admin role (403) - PASS",
+    "POST /api/admin/send-digest - admin can trigger digest successfully - PASS",
+    "POST /api/admin/send-digest - digest logs updated after send - PASS",
+    "GET /api/admin/subscribers - requires authentication (401) - PASS",
+    "GET /api/admin/subscribers - requires admin role (403) - PASS",
+    "GET /api/admin/subscribers - returns list of all subscribers - PASS",
+    "DELETE /api/admin/posts/expired-guests - requires authentication (401) - PASS",
+    "DELETE /api/admin/posts/expired-guests - requires admin role (403) - PASS",
+    "DELETE /api/admin/posts/expired-guests - admin can delete expired guests - PASS",
+    "UI: Admin Newsletter tab shows Weekly Digest Management section - PASS",
+    "UI: Stats cards show Newsletter Subs, Registered Users, Total Audience, Digests Sent - PASS",
+    "UI: Schedule section shows 'every Monday at 9:00 AM UTC' - PASS",
+    "UI: Manual Send section with 'Send Digest Now' button present - PASS",
+    "UI: Send Digest Now button shows 'Sending...' while processing - PASS",
+    "UI: Recent Digest History shows sent digests with timestamps and recipient counts - PASS",
+    "UI: Digest history updates after manual send - PASS"
+  ],
+  
+  "test_report_links": [
+    "/app/backend/tests/test_weekly_digest.py",
+    "/app/test_reports/pytest/pytest_weekly_digest.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [
+    "/app/backend/server.py",
+    "/app/backend/tests/test_weekly_digest.py"
+  ],
+  
+  "fixes_applied": [
+    {
+      "file": "/app/backend/server.py",
+      "issue": "DELETE /api/admin/posts/expired-guests returned 404 due to route ordering conflict with DELETE /api/admin/posts/{post_id}",
+      "fix": "Moved the specific route /admin/posts/expired-guests BEFORE the dynamic route /admin/posts/{post_id} to ensure proper route matching"
+    }
+  ],
+  
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "100% (all UI components verified)"
+  },
+  
+  "test_credentials": {
+    "admin_email": "admin-digest-test@example.com",
+    "admin_password": "test123456",
+    "admin_setup_key": "b4b-admin-2024"
+  },
+  
+  "seed_data_creation": "Test newsletter subscribers created with TEST_ prefix during pytest run. A digest was sent during UI testing.",
+  
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Weekly Digest feature fully tested and working. Key endpoints: POST /api/newsletter/subscribe, POST /api/newsletter/unsubscribe, GET /api/admin/digest-status, POST /api/admin/send-digest, GET /api/admin/subscribers, DELETE /api/admin/posts/expired-guests. Admin UI has 6 tabs including Newsletter tab with digest management. APScheduler runs digest every Monday 9AM UTC. Resend API is used for email delivery (sandbox/free tier).",
+  
+  "feature_verification_summary": {
+    "newsletter_subscription": {
+      "status": "WORKING",
+      "details": [
+        "POST /api/newsletter/subscribe adds email to newsletter list",
+        "Handles already subscribed and resubscription cases",
+        "POST /api/newsletter/unsubscribe sets active=false",
+        "Gracefully handles non-existent emails"
+      ]
+    },
+    "admin_digest_status": {
+      "status": "WORKING",
+      "details": [
+        "GET /api/admin/digest-status requires admin auth",
+        "Returns: active_subscribers, registered_users, total_audience, schedule, total_digests_sent, recent_logs, last_digest",
+        "total_audience = active_subscribers + registered_users"
+      ]
+    },
+    "admin_send_digest": {
+      "status": "WORKING",
+      "details": [
+        "POST /api/admin/send-digest requires admin auth",
+        "Triggers digest email to all subscribers and registered users",
+        "Creates log entry in digest_log collection",
+        "Returns sent count and any errors"
+      ]
+    },
+    "admin_subscribers_list": {
+      "status": "WORKING",
+      "details": [
+        "GET /api/admin/subscribers requires admin auth",
+        "Returns list of all newsletter subscribers with email, active status, subscribed_at"
+      ]
+    },
+    "admin_delete_expired_guests": {
+      "status": "WORKING",
+      "details": [
+        "DELETE /api/admin/posts/expired-guests requires admin auth",
+        "Deletes all guest posts where expires_at <= now",
+        "Returns count of deleted posts"
+      ]
+    },
+    "admin_newsletter_ui": {
+      "status": "WORKING",
+      "details": [
+        "Newsletter tab visible in admin dashboard (6 tabs total)",
+        "Stats cards: Newsletter Subs, Registered Users, Total Audience, Digests Sent",
+        "Schedule section shows automation schedule",
+        "Manual Send section with working Send Digest Now button",
+        "Button shows 'Sending...' with spinner during operation",
+        "Recent Digest History shows sent digests with details"
+      ]
+    }
+  }
+}
