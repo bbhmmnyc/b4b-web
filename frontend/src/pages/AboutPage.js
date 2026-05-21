@@ -17,7 +17,7 @@ export default function AboutPage() {
             About <span className="font-black">Blogs4Blocks</span>
           </h1>
           <p className="text-lg text-brand-grey max-w-xl mx-auto leading-relaxed">
-            Born in the blocks of New York City, built for marketing professionals across every block on every continent.
+            Born from the blocks of New York City, built by and for marketing individuals across every continent, block by block.
           </p>
         </div>
       </section>
@@ -33,7 +33,7 @@ export default function AboutPage() {
                 Marketing doesn't work the same everywhere. What drives conversions in Tokyo might fall flat in Sao Paulo. What goes viral in Lagos might confuse audiences in Stockholm.
               </p>
               <p className="text-brand-grey leading-relaxed mb-4">
-                <strong className="text-[#1A1A1A]">Blogs 4 Blocks</strong> exists to bridge that gap. We're an open forum where marketing professionals from every corner of the world share what actually works in their markets.
+                <strong className="text-[#1A1A1A]">Blogs 4 Blocks</strong> exists to bridge that gap. We're a global open forum where marketing professionals from every corner of the world share what actually works in their markets.
               </p>
               <p className="text-brand-grey leading-relaxed">
                 No gatekeeping. No paywalls. Just real marketers helping real marketers, block by block, city by city.
@@ -41,7 +41,7 @@ export default function AboutPage() {
             </div>
             <div className="space-y-px bg-[#E5E5E5]">
               {[
-                { icon: <Globe className="w-5 h-5" />, title: 'Global Perspectives', desc: 'Insights from marketing pros on every continent' },
+                { icon: <Globe className="w-5 h-5" />, title: 'Global Perspectives', desc: 'Insights from marketing individuals on every continent' },
                 { icon: <Users className="w-5 h-5" />, title: 'Open Forum', desc: 'Anyone can contribute — registered or as a guest' },
                 { icon: <PenLine className="w-5 h-5" />, title: 'Real Strategies', desc: 'Not theory — practical tactics that work in the field' },
                 { icon: <Heart className="w-5 h-5" />, title: 'Community First', desc: 'Built by marketers, for marketers' },
