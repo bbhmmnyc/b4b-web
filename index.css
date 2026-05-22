@@ -1,0 +1,166 @@
+cat > /var/www/blogs4blocks/frontend/src/index.css << 'EOF'
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #C8D2DE;
+  background-image:
+    radial-gradient(ellipse 68% 50% at 14% 4%, rgba(232,240,252,0.68) 0%, transparent 52%),
+    radial-gradient(ellipse 50% 58% at 90% 90%, rgba(180,196,218,0.60) 0%, transparent 55%),
+    linear-gradient(155deg, #D2DAE6 0%, #C2CEDC 38%, #CAD6E6 65%, #B8C6D4 100%);
+  color: #1A2A3C;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 210 20% 92%;
+    --foreground: 215 30% 14%;
+    --card: 210 30% 97%;
+    --card-foreground: 215 30% 14%;
+    --popover: 210 30% 97%;
+    --popover-foreground: 215 30% 14%;
+    --primary: 173 72% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 88%;
+    --secondary-foreground: 215 25% 25%;
+    --muted: 210 20% 88%;
+    --muted-foreground: 215 16% 45%;
+    --accent: 173 72% 35%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 351 72% 44%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 20% 82%;
+    --input: 210 25% 94%;
+    --ring: 173 72% 35%;
+    --radius: 0.5rem;
+    --chart-1: 173 72% 35%;
+    --chart-2: 213 60% 38%;
+    --chart-3: 24 72% 44%;
+    --chart-4: 351 72% 44%;
+    --chart-5: 271 50% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  [data-debug-wrapper="true"] {
+    display: contents !important;
+  }
+  [data-debug-wrapper="true"] > * {
+    margin-left: inherit;
+    margin-right: inherit;
+    margin-top: inherit;
+    margin-bottom: inherit;
+    padding-left: inherit;
+    padding-right: inherit;
+    padding-top: inherit;
+    padding-bottom: inherit;
+    column-gap: inherit;
+    row-gap: inherit;
+    gap: inherit;
+  }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtle-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-subtle-drift {
+  animation: subtle-drift 8s ease-in-out infinite;
+}
+
+.noise-overlay::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+.blog-content h1 { font-size: 2rem; font-weight: 700; margin: 1.5rem 0 0.75rem; font-family: 'Outfit', sans-serif; color: #F1F5F9; }
+.blog-content h2 { font-size: 1.5rem; font-weight: 600; margin: 1.25rem 0 0.5rem; font-family: 'Outfit', sans-serif; color: #F1F5F9; }
+.blog-content h3 { font-size: 1.25rem; font-weight: 600; margin: 1rem 0 0.5rem; font-family: 'Outfit', sans-serif; color: #F1F5F9; }
+.blog-content p { margin: 0.75rem 0; line-height: 1.8; color: #94A3B8; }
+.blog-content ul, .blog-content ol { margin: 0.75rem 0; padding-left: 1.5rem; }
+.blog-content ul { list-style-type: disc; }
+.blog-content ol { list-style-type: decimal; }
+.blog-content li { margin: 0.25rem 0; line-height: 1.7; color: #94A3B8; }
+.blog-content li p { margin: 0.15rem 0; }
+.blog-content strong { font-weight: 700; color: #F1F5F9; }
+.blog-content em { font-style: italic; }
+.blog-content u { text-decoration: underline; }
+.blog-content s { text-decoration: line-through; }
+.blog-content a { color: #14B8A6; text-decoration: underline; text-underline-offset: 3px; }
+.blog-content a:hover { color: #2DD4BF; }
+.blog-content blockquote { border-left: 3px solid #14B8A6; padding-left: 1.25rem; margin: 1.5rem 0; color: #64748B; font-style: italic; }
+.blog-content pre { background: #0D1321; color: #E2E8F0; padding: 1rem; border-radius: 0.25rem; overflow-x: auto; margin: 1rem 0; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; border: 1px solid rgba(255,255,255,0.07); }
+.blog-content code { background: rgba(255,255,255,0.07); color: #14B8A6; padding: 0.15rem 0.4rem; border-radius: 0.15rem; font-size: 0.9em; font-family: 'JetBrains Mono', monospace; }
+.blog-content pre code { background: none; padding: 0; color: inherit; }
+.blog-content mark { background-color: #14B8A6; color: #080C14; padding: 0.1rem 0.2rem; border-radius: 0.1rem; }
+.blog-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 2rem 0; }
+
+.tiptap { outline: none; min-height: 300px; padding: 1rem; }
+.tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; color: #737373; pointer-events: none; height: 0; }
+.tiptap h1 { font-size: 2rem; font-weight: 700; margin: 1rem 0 0.5rem; font-family: 'Outfit', sans-serif; }
+.tiptap h2 { font-size: 1.5rem; font-weight: 600; margin: 0.75rem 0 0.35rem; font-family: 'Outfit', sans-serif; }
+.tiptap h3 { font-size: 1.25rem; font-weight: 600; margin: 0.5rem 0 0.25rem; font-family: 'Outfit', sans-serif; }
+.tiptap p { margin: 0.5rem 0; line-height: 1.7; }
+.tiptap ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+.tiptap ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+.tiptap li { margin: 0.15rem 0; }
+.tiptap li p { margin: 0; }
+.tiptap blockquote { border-left: 3px solid #1A1A1A; padding-left: 1rem; margin: 0.75rem 0; color: #737373; }
+.tiptap pre { background: #1A1A1A; color: #E5E5E5; padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 0.75rem 0; font-family: monospace; }
+.tiptap code { background: #F4F4F5; padding: 0.1rem 0.3rem; border-radius: 0.15rem; font-size: 0.9em; }
+.tiptap pre code { background: none; padding: 0; }
+.tiptap mark { background-color: #FACC15; padding: 0.05rem 0.15rem; border-radius: 0.1rem; }
+.tiptap hr { border: none; border-top: 1px solid #E5E5E5; margin: 1.5rem 0; }
+.tiptap a { color: #1A1A1A; text-decoration: underline; cursor: pointer; }
+.tiptap img { max-width: 100%; height: auto; border-radius: 0.25rem; margin: 1rem 0; }
+.blog-content img { max-width: 100%; height: auto; border-radius: 0.25rem; margin: 1rem 0; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #A8B8CC; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #8898AC; }
+
+::selection { background: rgba(10,122,106,0.25); color: #0A3A30; }
+
+.font-mono-tech { font-family: 'JetBrains Mono', monospace; }
+EOF
