@@ -83,7 +83,7 @@ export default function HomePage() {
               className="flex-1 text-center lg:text-left"
             >
               <p className="text-xs font-bold uppercase mb-6 tracking-[0.28em]" style={{ ...MONO, color: '#0A7A6A' }} data-testid="hero-eyebrow">
-                Marketing Insights from Every Block
+                Marketing Insights from Every Block. First hand experiences from the people who work in them, city by city, block by block.
               </p>
 
               <h1
