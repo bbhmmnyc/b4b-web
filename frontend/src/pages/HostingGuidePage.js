@@ -63,7 +63,6 @@ cd backend
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-cat > .env << 'EOF'
 MONGO_URL=mongodb+srv://USER:PASS@cluster.mongodb.net
 DB_NAME=blogs4blocks
 JWT_SECRET=$(openssl rand -hex 32)

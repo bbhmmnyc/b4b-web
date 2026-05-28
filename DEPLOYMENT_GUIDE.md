@@ -1,4 +1,5 @@
 # Blogs 4 Blocks — Oracle Cloud Deployment Guide
+
 ## Ubuntu (AMD) — Always Free Tier
 
 This guide walks you through deploying Blogs 4 Blocks on an **Oracle Cloud Infrastructure (OCI) Always Free** AMD instance running **Ubuntu**. The Always Free tier includes up to 2x **VM.Standard.E2.1.Micro** instances (1 OCPU, 1 GB RAM each) with 200 GB total block storage — plenty for a production blog.
@@ -138,10 +139,9 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Create the backend `.env` file:
+### Create the backend `.env` file
 
 ```bash
-cat > .env << 'EOF'
 MONGO_URL=mongodb+srv://YOUR_USER:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net
 DB_NAME=blogs4blocks
 JWT_SECRET=CHANGE_THIS_TO_A_LONG_RANDOM_STRING
@@ -154,7 +154,7 @@ EOF
 
 > **Important:** Replace all placeholder values. For `JWT_SECRET`, generate one with: `openssl rand -hex 32`
 
-### Quick test:
+### Quick test
 
 ```bash
 uvicorn server:app --host 0.0.0.0 --port 8001
@@ -169,7 +169,6 @@ uvicorn server:app --host 0.0.0.0 --port 8001
 cd /var/www/blogs4blocks/frontend
 
 # Create production .env
-cat > .env << 'EOF'
 REACT_APP_BACKEND_URL=https://yourdomain.com
 EOF
 
@@ -309,10 +308,12 @@ Running MongoDB locally on a 1 GB RAM micro instance is tight. MongoDB Atlas fre
 4. Under **Network Access**, add your Oracle Cloud instance's public IP (or `0.0.0.0/0` for testing)
 5. Click **Connect** → **Drivers** → copy the connection string
 6. Update your backend `.env`:
+
    ```
    MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net
    DB_NAME=blogs4blocks
    ```
+
 7. Restart the backend: `sudo systemctl restart blogs4blocks`
 
 ### (Alternative) Install MongoDB Locally
@@ -389,12 +390,14 @@ crontab -e
 - **Add 2 GB swap** (Step 4) to handle build spikes and prevent OOM kills
 - **Use 1 Uvicorn worker** if RAM is tight: change `--workers 2` to `--workers 1` in the systemd service
 - **Enable gzip** in Nginx for faster page loads:
+
   ```nginx
   # Add to the server block or http block in /etc/nginx/nginx.conf
   gzip on;
   gzip_types text/plain text/css application/json application/javascript text/xml;
   gzip_min_length 1000;
   ```
+
 - **Monitor memory:** `free -h` and `htop` (install with `sudo apt install htop`)
 
 ---

@@ -1,4 +1,3 @@
-cat > /var/www/blogs4blocks/frontend/src/components/Navbar.js << 'EOF'
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
@@ -53,9 +52,8 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-1">
             <Link
               to="/"
-              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${
-                isActive('/') ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${isActive('/') ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'
+                }`}
               data-testid="nav-home"
             >
               Home
@@ -64,9 +62,8 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${
-                    location.pathname.startsWith('/category') ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  className={`flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${location.pathname.startsWith('/category') ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'
+                    }`}
                   data-testid="nav-categories-dropdown"
                 >
                   Topics <ChevronDown className="w-3 h-3" />
@@ -103,9 +100,8 @@ export default function Navbar() {
 
             <Link
               to="/about"
-              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${
-                isActive('/about') ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${isActive('/about') ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'
+                }`}
               data-testid="nav-about"
             >
               About
@@ -113,9 +109,8 @@ export default function Navbar() {
 
             <Link
               to="/advertise"
-              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${
-                isActive('/advertise') ? 'text-amber-700' : 'text-slate-600 hover:text-amber-700'
-              }`}
+              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${isActive('/advertise') ? 'text-amber-700' : 'text-slate-600 hover:text-amber-700'
+                }`}
               data-testid="nav-advertise"
             >
               Advertise
@@ -285,4 +280,3 @@ export default function Navbar() {
     </nav>
   );
 }
-EOF

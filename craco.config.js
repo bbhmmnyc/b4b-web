@@ -1,4 +1,3 @@
-cat > /var/www/blogs4blocks/frontend/craco.config.js << 'EOF'
 const path = require("path");
 
 const isDevServer = process.env.NODE_ENV !== "production";
@@ -91,6 +90,4 @@ webpackConfig.devServer = (devServerConfig) => {
   }
   return devServerConfig;
 };
-
 module.exports = webpackConfig;
-EOF

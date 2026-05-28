@@ -1,4 +1,3 @@
-cat > /var/www / blogs4blocks / frontend / src / pages / HomePage.js << 'EOF'
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -346,4 +345,3 @@ export default function HomePage() {
     </div>
   );
 }
-EOF

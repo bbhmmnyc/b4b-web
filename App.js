@@ -1,4 +1,3 @@
-cat > /var/www/blogs4blocks/frontend/src/App.js << 'EOF'
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
@@ -54,4 +53,3 @@ function App() {
 }
 
 export default App;
-EOF

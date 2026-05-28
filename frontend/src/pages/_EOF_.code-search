@@ -1,0 +1,57 @@
+# Query: 'EOF'
+# ContextLines: 1
+
+13 results - 12 files
+
+App.js:
+  1
+  2  import React from 'react';
+
+craco.config.js:
+  1: 
+  2  const path = require("path");
+
+DEPLOYMENT_GUIDE.md:
+  143  ```bash
+  145  MONGO_URL=mongodb+srv://YOUR_USER:YOUR_PASSWORD@YOUR_CLUSTER.mongodb.net
+
+  171  # Create production .env
+  173  REACT_APP_BACKEND_URL=https://yourdomain.com
+
+index.css:
+  1: cat>/var/www/blogs4blocks/frontend/src/index.css << 'EOF'
+  2  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+components\CityBackground.js:
+  1: cat > /var/www/blogs4blocks/frontend/src/components/CityBackground.js << 'EOF'
+  2  import React, { useState, useEffect, useRef } from 'react';
+
+components\Navbar.js:
+  1: cat > /var/www/blogs4blocks/frontend/src/components/Navbar.js << 'EOF'
+  2  import React, { useState } from 'react';
+
+frontend\src\components\CityBackground.js:
+  1: cat > /var/www/blogs4blocks/frontend/src/components/CityBackground.js << 'EOF'
+  2  import React, { useState, useEffect, useRef } from 'react';
+
+frontend\src\components\Navbar.js:
+  1: cat > /var/www/blogs4blocks/frontend/src/components/Navbar.js << 'EOF'
+  2  import React, { useState } from 'react';
+
+frontend\src\pages\HomePage.js:
+  1: cat > /var/www / blogs4blocks / frontend / src / pages / HomePage.js << 'EOF'
+  2  import React, { useState, useEffect } from 'react';
+
+frontend\src\pages\HostingGuidePage.js:
+  65  
+  66: cat > .env << 'EOF'
+  67  MONGO_URL=mongodb+srv://USER:PASS@cluster.mongodb.net
+
+pages\HomePage.js:
+  1: cat > /var/www/blogs4blocks/frontend/src/pages/HomePage.js << 'EOF'
+  2  import React, { useState, useEffect } from 'react';
+
+pages\HostingGuidePage.js:
+  65  
+  66: cat > .env << 'EOF'
+  67  MONGO_URL=mongodb+srv://USER:PASS@cluster.mongodb.net

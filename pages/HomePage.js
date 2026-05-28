@@ -1,4 +1,3 @@
-cat > /var/www/blogs4blocks/frontend/src/pages/HomePage.js << 'EOF'
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -46,8 +45,8 @@ export default function HomePage() {
   const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API}/posts?limit=6`).then(res => setPosts(res.data.posts)).catch(() => {});
-    axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => {});
+    axios.get(`${API}/posts?limit=6`).then(res => setPosts(res.data.posts)).catch(() => { });
+    axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => { });
   }, [API]);
 
   const handleSearch = (e) => {
@@ -362,4 +361,3 @@ export default function HomePage() {
     </div>
   );
 }
-EOF
