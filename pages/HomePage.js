@@ -177,7 +177,6 @@ export default function HomePage() {
               transition={{ duration: 0.7, delay: 0.35 }}
               className="flex flex-wrap gap-10 mt-16 pt-8 justify-center lg:justify-start"
               style={{ borderTop: '1px solid rgba(30,50,80,0.10)' }}
-            >
               {[
                 { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#0A7A6A' },
                 { icon: <Users className="w-4 h-4" />, value: stats.total_users || 0, label: 'Contributors', color: '#1A4A8A' },
@@ -191,8 +190,8 @@ export default function HomePage() {
               ))}
             </motion.div>
           )}
-        </div>
-      </section>
+    </div>
+      </section >
 
       <section id="categories" className="py-20 md:py-28" style={{ borderBottom: '1px solid rgba(30,50,80,0.09)' }} data-testid="categories-section">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -247,22 +246,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {popularPosts.length > 0 && (
-        <section className="py-20 md:py-28" style={{ borderBottom: '1px solid rgba(30,50,80,0.09)' }} data-testid="popular-posts-section">
-          <div className="max-w-7xl mx-auto px-6 md:px-12">
-            <div className="mb-14">
-              <div className="flex items-center gap-3 mb-3">
-                <Flame className="w-4 h-4" style={{ color: '#C04030' }} />
-                <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ ...MONO, color: '#0A7A6A' }}>// Most Engaged</p>
-              </div>
-              <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#1A2A3C' }} data-testid="popular-heading">Trending Now</h2>
+  {
+    popularPosts.length > 0 && (
+      <section className="py-20 md:py-28" style={{ borderBottom: '1px solid rgba(30,50,80,0.09)' }} data-testid="popular-posts-section">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="mb-14">
+            <div className="flex items-center gap-3 mb-3">
+              <Flame className="w-4 h-4" style={{ color: '#C04030' }} />
+              <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ ...MONO, color: '#0A7A6A' }}>// Most Engaged</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="popular-posts-grid">
-              {popularPosts.map((post, i) => <BlogCard key={post.id} post={post} index={i} />)}
-            </div>
+            <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#1A2A3C' }} data-testid="popular-heading">Trending Now</h2>
           </div>
-        </section>
-      )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="popular-posts-grid">
+            {popularPosts.map((post, i) => <BlogCard key={post.id} post={post} index={i} />)}
+          </div>
+        </div>
+      </section>
+    )
+  }
 
       <section className="py-20 md:py-28" style={{ borderBottom: '1px solid rgba(30,50,80,0.09)' }} data-testid="howto-stats-section">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -358,6 +359,5 @@ export default function HomePage() {
         </div>
       </section>
 
-    </div>
+    </div >
   );
-}
