@@ -1,4 +1,4 @@
-cat > /var/www/blogs4blocks/frontend/src/pages/HomePage.js << 'EOF'
+cat > /var/www / blogs4blocks / frontend / src / pages / HomePage.js << 'EOF'
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -46,8 +46,8 @@ export default function HomePage() {
   const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API}/posts?limit=6`).then(res => setPosts(res.data.posts)).catch(() => {});
-    axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => {});
+    axios.get(`${API}/posts?limit=6`).then(res => setPosts(res.data.posts)).catch(() => { });
+    axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => { });
   }, [API]);
 
   const handleSearch = (e) => {
@@ -82,60 +82,43 @@ export default function HomePage() {
               transition={{ duration: 0.7 }}
               className="flex-1 text-center lg:text-left"
             >
-              <p className="text-xs font-bold uppercase mb-6 tracking-[0.28em]" style={{ ...MONO, color: '#0A7A6A' }} data-testid="hero-eyebrow">
-                Marketing Insights from Every Block. First hand experiences from the people who work in them, city by city, block by block.
-              </p>
-
-              <h1
-                className="font-heading font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tighter mb-6 leading-[0.9]"
-                style={{
-                  background: 'linear-gradient(135deg, #1A3A60 0%, #0A7A6A 40%, #C04030 72%, #1A3A60 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
+              <img
+                src="/b4b-logo.png"
+                alt="Blogs 4 Blocks - Global Marketing Forum"
+                className="w-full mb-6"
+                style={{ maxWidth: "480px" }}
                 data-testid="hero-title"
-              >
-                Blogs4Blocks
-              </h1>
-
-              <p className="text-xs uppercase tracking-[0.22em] mb-8" style={{ ...MONO, color: 'rgba(26,58,96,0.50)' }}>
-                Global Connections&nbsp;&nbsp;·&nbsp;&nbsp;Local Impact&nbsp;&nbsp;·&nbsp;&nbsp;Marketing Together
-              </p>
-
-              <p className="text-base md:text-lg mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0" style={{ color: '#2A3A52' }}>
+              />
+              <p className="text-base md:text-lg mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0"
+                style={{ color: "#2A3A52" }}>
                 A global open forum where marketing professionals share strategies, insights, and real-world experiences from every corner of the world.
               </p>
-
               <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-10 mx-auto lg:mx-0" data-testid="hero-search-form">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#6A7A90' }} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#6A7A90" }} />
                   <Input
                     placeholder="Search marketing topics..."
                     value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-11 rounded-none h-12 text-sm border-0"
-                    style={{ background: 'rgba(255,255,255,0.75)', border: '1px solid rgba(30,50,80,0.18)', color: '#1A2A3C', backdropFilter: 'blur(8px)' }}
+                    style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(30,50,80,0.8)", color: "#1A2A3C", backdropFilter: "blur(8px)" }}
                     data-testid="hero-search-input"
                   />
                 </div>
                 <Button
                   type="submit"
                   className="rounded-none h-12 px-6 text-xs font-bold uppercase tracking-widest text-white"
-                  style={{ background: 'linear-gradient(155deg, #0A8A78 0%, #077060 50%, #055048 100%)', boxShadow: '0 2px 12px rgba(7,112,96,0.30)' }}
+                  style={{ background: "linear-gradient(155deg, #0A8A78 0%, #077060 50%, #055048 100%)" }}
                   data-testid="hero-search-btn"
                 >
                   Search
                 </Button>
               </form>
-
               <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                 <Button
-                  onClick={() => navigate('/write')}
+                  onClick={() => navigate("/write")}
                   className="rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest text-white"
-                  style={{ background: 'linear-gradient(155deg, #C42838 0%, #A01E2C 48%, #7E1420 100%)', boxShadow: '0 3px 16px rgba(160,30,44,0.38), inset 0 1px 0 rgba(255,255,255,0.20)' }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 24px rgba(160,30,44,0.55), inset 0 1px 0 rgba(255,255,255,0.20)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 3px 16px rgba(160,30,44,0.38), inset 0 1px 0 rgba(255,255,255,0.20)'; }}
+                  style={{ background: "linear-gradient(155deg, #C42838 0%, #A01E2C 48%, #7E1420 100%)" }}
                   data-testid="hero-write-btn"
                 >
                   <PenLine className="w-4 h-4 mr-2" />
@@ -143,11 +126,9 @@ export default function HomePage() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+                  onClick={() => document.getElementById("categories")?.scrollIntoView({ behavior: "smooth" })}
                   className="rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest"
-                  style={{ background: 'rgba(255,255,255,0.62)', border: '1px solid rgba(30,50,80,0.24)', color: '#1E3050', backdropFilter: 'blur(8px)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.88)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.62)'; }}
+                  style={{ background: "rgba(255,255,255,0.62)", border: "1px solid rgba(30,50,80,0.24)", color: "#1E3050", backdropFilter: "blur(8px)" }}
                   data-testid="hero-explore-btn"
                 >
                   Explore Topics
@@ -159,40 +140,43 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex-shrink-0 w-56 sm:w-72 md:w-80 lg:w-[360px]"
+              className="flex-shrink-0 w-56 sm:w-72 md:w-80 lg:w-[360px] flex flex-col items-center gap-4"
             >
+              <p className="text-center text-sm font-bold uppercase tracking-wide"
+                style={{ color: "#0A7A6A", lineHeight: "1.6" }}>
+                Marketing insights from around the world.<br />
+                From the people who work in them,<br />
+                city by city, block by block.
+              </p>
               <img
-                src="/b4b-logo.png"
-                alt="Blogs 4 Blocks — Global Marketing Forum"
+                src="/icon-512.png"
+                alt="Global Marketing"
                 className="w-full h-auto"
-                style={{ filter: 'drop-shadow(0 8px 32px rgba(10,120,106,0.18)) drop-shadow(0 2px 8px rgba(20,40,80,0.12))' }}
+                style={{ transform: "scaleX(-1)", filter: "drop-shadow(0 8px 32px rgba(10,120,106,0.18))" }}
                 data-testid="hero-logo"
               />
-            </motion.div>
+            </motion.div>          {stats && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.35 }}
+                className="flex flex-wrap gap-10 mt-16 pt-8 justify-center lg:justify-start"
+                style={{ borderTop: '1px solid rgba(30,50,80,0.10)' }}
+              >
+                {[
+                  { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#0A7A6A' },
+                  { icon: <Users className="w-4 h-4" />, value: stats.total_users || 0, label: 'Contributors', color: '#1A4A8A' },
+                  { icon: <Globe className="w-4 h-4" />, value: stats.total_countries || 0, label: 'Countries', color: '#8A3A20' },
+                ].map((stat, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span style={{ color: stat.color }}>{stat.icon}</span>
+                    <span className="font-black text-2xl" style={{ ...MONO, color: '#1A2A3C' }}>{stat.value}</span>
+                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#4A5A70' }}>{stat.label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            )}
           </div>
-
-          {stats && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.35 }}
-              className="flex flex-wrap gap-10 mt-16 pt-8 justify-center lg:justify-start"
-              style={{ borderTop: '1px solid rgba(30,50,80,0.10)' }}
-            >
-              {[
-                { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#0A7A6A' },
-                { icon: <Users className="w-4 h-4" />, value: stats.total_users || 0, label: 'Contributors', color: '#1A4A8A' },
-                { icon: <Globe className="w-4 h-4" />, value: stats.total_countries || 0, label: 'Countries', color: '#8A3A20' },
-              ].map((stat, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span style={{ color: stat.color }}>{stat.icon}</span>
-                  <span className="font-black text-2xl" style={{ ...MONO, color: '#1A2A3C' }}>{stat.value}</span>
-                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#4A5A70' }}>{stat.label}</span>
-                </div>
-              ))}
-            </motion.div>
-          )}
-        </div>
       </section>
 
       <section id="categories" className="py-20 md:py-28" style={{ borderBottom: '1px solid rgba(30,50,80,0.09)' }} data-testid="categories-section">
