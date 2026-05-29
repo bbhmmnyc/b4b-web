@@ -154,7 +154,11 @@ export default function HomePage() {
                 style={{ transform: "scaleX(-1)", filter: "drop-shadow(0 8px 32px rgba(10,120,106,0.18))" }}
                 data-testid="hero-logo"
               />
-            </motion.div>          {stats && (
+            </motion.div>          
+          </div>
+        </section>
+
+      {stats && (          
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
