@@ -1,4 +1,3 @@
-cat > /var/www/blogs4blocks/frontend/src/components/CityBackground.js << 'EOF'
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import cityBackgrounds from '../utils/cityBackgrounds';
@@ -67,4 +66,4 @@ export default function CityBackground() {
     </div>
   );
 }
-EOF
+

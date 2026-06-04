@@ -176,19 +176,20 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.35 }}
               className="flex flex-wrap gap-10 mt-16 pt-8 justify-center lg:justify-start"
-              style={{ borderTop: '1px solid rgba(30,50,80,0.10)' }}
-              {[
-                { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#0A7A6A' },
-                { icon: <Users className="w-4 h-4" />, value: stats.total_users || 0, label: 'Contributors', color: '#1A4A8A' },
-                { icon: <Globe className="w-4 h-4" />, value: stats.total_countries || 0, label: 'Countries', color: '#8A3A20' },
-              ].map((stat, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span style={{ color: stat.color }}>{stat.icon}</span>
-                  <span className="font-black text-2xl" style={{ ...MONO, color: '#1A2A3C' }}>{stat.value}</span>
-                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#4A5A70' }}>{stat.label}</span>
-                </div>
-              ))}
-            </motion.div>
+              style={{ borderTop: '1px solid rgba(30,50,80,0.10)' }
+              data-testid="hero-stats"}
+          {[
+            { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#0A7A6A' },
+            { icon: <Users className="w-4 h-4" />, value: stats.total_users || 0, label: 'Contributors', color: '#1A4A8A' },
+            { icon: <Globe className="w-4 h-4" />, value: stats.total_countries || 0, label: 'Countries', color: '#8A3A20' },
+          ].map((stat, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span style={{ color: stat.color }}>{stat.icon}</span>
+              <span className="font-black text-2xl" style={{ ...MONO, color: '#1A2A3C' }}>{stat.value}</span>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#4A5A70' }}>{stat.label}</span>
+            </div>
+          ))}
+        </motion.div>
           )}
     </div>
       </section >
@@ -360,4 +361,4 @@ export default function HomePage() {
       </section>
 
     </div >
-  );
+  };

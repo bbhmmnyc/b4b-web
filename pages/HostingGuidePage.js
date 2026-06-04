@@ -22,7 +22,7 @@ const steps = [
 # Add Ingress Rules for TCP ports: 22, 80, 443
 
 # Then SSH in and configure Ubuntu firewall:
-ssh -i ~/.ssh/id_rsa ubuntu@YOUR_PUBLIC_IP
+ssh -i ~/.ssh/id_rsa ubuntu@129.80.6.105
 
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
