@@ -1,11 +1,9 @@
 import os
-import hashlib
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from database import db
 from auth import require_user, require_admin
 from models import AdminSetupRequest
-from email_service import send_email_notification
 
 router = APIRouter()
 
@@ -19,16 +17,6 @@ async def self_promote_to_admin(req: AdminSetupRequest, user=Depends(require_use
         raise HTTPException(status_code=403, detail="Invalid admin setup key")
     await db.users.update_one({"id": user["id"]}, {"$set": {"is_admin": True}})
     return {"message": "You are now an admin! Refresh the page to access the admin panel.", "is_admin": True}
-
-
-@router.put("/admin/users/{user_id}/toggle-admin")
-async def toggle_user_admin(user_id: str, admin=Depends(require_admin)):
-    target = await db.users.find_one({"id": user_id}, {"_id": 0})
-    if not target:
-        raise HTTPException(status_code=404, detail="User not found")
-    new_status = not target.get("is_admin", False)
-    await db.users.update_one({"id": user_id}, {"$set": {"is_admin": new_status}})
-    return {"message": f"User {'promoted to' if new_status else 'removed from'} admin", "is_admin": new_status}
 
 
 @router.get("/admin/stats")

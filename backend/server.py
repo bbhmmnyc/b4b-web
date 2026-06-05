@@ -33,13 +33,14 @@ logger = logging.getLogger("server")
 
 app = FastAPI(title="Blogs 4 Blocks API")
 
-cors_origins = [
-    origin.strip()
-    for origin in os.environ.get("CORS_ORIGINS", os.environ.get("SITE_URL", "")).split(",")
-    if origin.strip()
-]
-if not cors_origins:
-    cors_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in origins],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
 
 app.add_middleware(
     CORSMiddleware,
