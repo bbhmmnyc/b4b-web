@@ -16,6 +16,10 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
+# Lock files (uncomment to ignore)
+# yarn.lock
+# package-lock.json
+
 # Testing
 /coverage
 
