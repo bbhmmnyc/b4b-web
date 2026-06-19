@@ -12,9 +12,9 @@ router = APIRouter()
 async def self_promote_to_admin(req: AdminSetupRequest, user=Depends(require_user)):
     admin_key = os.environ.get("ADMIN_SETUP_KEY")
     if not admin_key:
-        raise HTTPException(status_code=500, detail="Admin setup is not configured")
+        raise ValueError(status_code=500, detail="Admin setup is not configured")
     if req.secret_key != admin_key:
-        raise HTTPException(status_code=403, detail="Invalid admin setup key")
+        raise ValueError(status_code=403, detail="Invalid admin setup key")
     await db.users.update_one({"id": user["id"]}, {"$set": {"is_admin": True}})
     return {"message": "You are now an admin! Refresh the page to access the admin panel.", "is_admin": True}
 
