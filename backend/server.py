@@ -33,7 +33,7 @@ logger = logging.getLogger("server")
 
 app = FastAPI(title="Blogs 4 Blocks API")
 
-origins = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+origins = os.environ.get('ALLOWED_ORIGINS', 'https://blogs4blocks.com').split(',')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in origins],
