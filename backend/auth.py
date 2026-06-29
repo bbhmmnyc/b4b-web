@@ -14,7 +14,7 @@ if not JWT_SECRET:
     if os.environ.get("ENVIRONMENT", "").lower() in {"test", "development"}:
         JWT_SECRET = "development-only-change-me"
     else:
-        raise RuntimeError("JWT_SECRET must be set in production")
+        raise ValueError("JWT_SECRET environment variable is required at startup")
 
 JWT_ALGORITHM = "HS256"
 
