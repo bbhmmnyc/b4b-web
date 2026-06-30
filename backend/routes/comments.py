@@ -110,12 +110,13 @@ comment_doc = {
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.comments.insert_one(comment_doc)
+
     # Track interaction
     if user:
         await db.user_interactions.update_one(
-            {"user_id": user["id"], "post_id": post_id},
-            {"$set": {"user_id": user["id"], "post_id": post_id, "type": "comment", "updated_at": datetime.now(timezone.utc).isoformat()}},
-            upsert=True
+          {"user_id": user["id"], "post_id": post_id},
+          {"$set": {"user_id": user["id"], "post_id": post_id, "type": "comment", "updated_at": datetime.now(timezone.utc).isoformat()}},
+          upsert=True
         )
     # Real-time broadcast
     safe_comment = {k: v for k, v in comment_doc.items() if k != "_id"}
@@ -125,7 +126,7 @@ comment_doc = {
         await notify_post_author_of_comment(post, comment_doc)
     except Exception:
         pass
-    return safe_comment
+    return safe\_comment
 
 
 @router.get("/posts/{post_id}/comments/live")
