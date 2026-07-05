@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/config';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star, ExternalLink, MapPin, Heart, Eye } from 'lucide-react';
@@ -160,7 +161,7 @@ export default function FeaturedCarousel({ posts }) {
               >
                 {post.cover_image && (
                   <img
-                    src={`${process.env.REACT_APP_BACKEND_URL}${post.cover_image}`}
+                    src={`${BACKEND_URL}${post.cover_image}`}
                     alt=""
                     className="absolute inset-0 w-full h-full object-cover opacity-40"
                   />

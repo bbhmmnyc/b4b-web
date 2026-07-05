@@ -45,16 +45,16 @@ async def get_posts(
     actual_skip = (page - 1) * limit if page > 1 else skip
     total = await db.posts.count_documents(query)
     posts = await db.posts.find(query, {"_id": 0}).sort("created_at", -1).skip(actual_skip).limit(limit).to_list(limit)
-   pages = max(1, (total + limit - 1) // limit)
+    pages = max(1, (total + limit - 1) // limit)
 
-return {
-    "posts": posts,
-    "total": total,
-    "page": page,
-    "pages": pages,
-    "total_pages": pages,
-    "per_page": limit,
-}
+    return {
+        "posts": posts,
+        "total": total,
+        "page": page,
+        "pages": pages,
+        "total_pages": pages,
+        "per_page": limit,
+    }
 
 
 @router.get("/posts/popular/list")

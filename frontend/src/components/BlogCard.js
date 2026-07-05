@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/config';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Eye, MapPin, Clock, ArrowRight, Timer } from 'lucide-react';
@@ -26,7 +27,7 @@ export default function BlogCard({ post, index = 0 }) {
         {post.cover_image && (
           <div className="relative h-36 overflow-hidden">
             <img
-              src={`${process.env.REACT_APP_BACKEND_URL}${post.cover_image}`}
+              src={`${BACKEND_URL}${post.cover_image}`}
               alt=""
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />

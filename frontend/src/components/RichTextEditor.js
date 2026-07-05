@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/config';
 import React, { useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -16,7 +17,7 @@ import {
   Link2, Highlighter, Undo, Redo, Minus, ImagePlus
 } from 'lucide-react';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = `${BACKEND_URL}/api`;
 
 function ToolbarButton({ onClick, active, children, title }) {
   return (
@@ -87,7 +88,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
       const formData = new FormData();
       formData.append('file', file);
       const res = await axios.post(`${API}/upload`, formData);
-      const imageUrl = `${process.env.REACT_APP_BACKEND_URL}${res.data.url}`;
+      const imageUrl = `${BACKEND_URL}${res.data.url}`;
       editor.chain().focus().setImage({ src: imageUrl }).run();
     } catch {
       window.alert('Image upload failed. Please try a different file.');

@@ -5,14 +5,9 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
 from urllib.parse import urlparse
+import stripe
 from database import db
 from auth import require_admin
-from emergentintegrations.payments.stripe.checkout import (
-    StripeCheckout,
-    CheckoutSessionRequest,
-    CheckoutSessionResponse,
-    CheckoutStatusResponse,
-)
 
 router = APIRouter()
 
@@ -134,13 +129,7 @@ async def create_ad_checkout(req: AdBookingRequest, http_request: Request):
     success_url = f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{origin}/advertise"
 
-    host_url = str(http_request.base_url).rstrip("/")
-    webhook_url = f"{host_url}/api/webhook/stripe"
-
-    stripe_checkout = StripeCheckout(
-        api_key=api_key,
-        webhook_url=webhook_url,
-    )
+    stripe.api_key = api_key
 
     booking_id = str(uuid.uuid4())[:8].upper()
 
@@ -154,20 +143,30 @@ async def create_ad_checkout(req: AdBookingRequest, http_request: Request):
         "email": req.email,
     }
 
-    checkout_req = CheckoutSessionRequest(
-        amount=total,
+    session = stripe.checkout.Session.create(
+        mode="payment",
+        line_items=[
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": f"Blogs4Blocks ad booking {booking_id}",
+                    },
+                    "unit_amount": int(total * 100),
+                },
+                "quantity": 1,
+            }
+        ],
         currency="usd",
         success_url=success_url,
         cancel_url=cancel_url,
         metadata=metadata,
     )
 
-    session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_req)
-
     tx = {
         "id": str(uuid.uuid4()),
         "booking_id": booking_id,
-        "session_id": session.session_id,
+        "session_id": session.id,
         "advertiser": req.advertiser,
         "contact_name": req.contact_name,
         "email": req.email,
@@ -189,7 +188,7 @@ async def create_ad_checkout(req: AdBookingRequest, http_request: Request):
 
     return {
         "url": session.url,
-        "session_id": session.session_id,
+        "session_id": session.id,
         "booking_id": booking_id,
         "total": total,
     }
@@ -253,15 +252,8 @@ async def check_payment_status(session_id: str, http_request: Request):
             detail="Payment processing unavailable",
         )
 
-    host_url = str(http_request.base_url).rstrip("/")
-    webhook_url = f"{host_url}/api/webhook/stripe"
-
-    stripe_checkout = StripeCheckout(
-        api_key=api_key,
-        webhook_url=webhook_url,
-    )
-
-    status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
+    stripe.api_key = api_key
+    status = stripe.checkout.Session.retrieve(session_id)
 
     tx = await db.payment_transactions.find_one(
         {"session_id": session_id},
@@ -290,7 +282,7 @@ async def check_payment_status(session_id: str, http_request: Request):
         "payment_status": status.payment_status,
         "amount_total": status.amount_total,
         "currency": status.currency,
-        "metadata": status.metadata,
+        "metadata": dict(status.metadata or {}),
     }
 
 
@@ -304,27 +296,29 @@ async def stripe_webhook(request: Request):
             detail="Payment processing unavailable",
         )
 
-    host_url = str(request.base_url).rstrip("/")
-    webhook_url = f"{host_url}/api/webhook/stripe"
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET")
+    if not webhook_secret:
+        raise HTTPException(
+            status_code=500,
+            detail="Payment webhook unavailable",
+        )
 
-    stripe_checkout = StripeCheckout(
-        api_key=api_key,
-        webhook_url=webhook_url,
-    )
-
+    stripe.api_key = api_key
     body = await request.body()
     sig = request.headers.get("Stripe-Signature", "")
 
     try:
-        event = await stripe_checkout.handle_webhook(body, sig)
-    except Exception:
+        event = stripe.Webhook.construct_event(body, sig, webhook_secret)
+    except (ValueError, stripe.SignatureVerificationError):
         raise HTTPException(
             status_code=400,
             detail="Invalid Stripe webhook",
         )
 
-    if event.payment_status == "paid":
-        await finalize_paid_transaction(event.session_id)
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        if session.get("payment_status") == "paid":
+            await finalize_paid_transaction(session["id"])
 
     return {"status": "ok"}
 

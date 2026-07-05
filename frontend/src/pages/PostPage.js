@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/config';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -230,7 +231,7 @@ export default function PostPage() {
         {post.cover_image && (
           <div className="overflow-hidden mb-10 border border-[#E5E5E5]" data-testid="post-cover-image">
             <img
-              src={`${process.env.REACT_APP_BACKEND_URL}${post.cover_image}`}
+              src={`${BACKEND_URL}${post.cover_image}`}
               alt={post.title}
               className="w-full h-auto max-h-[400px] object-cover"
             />

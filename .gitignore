@@ -31,6 +31,7 @@ next-env.d.ts
 
 # Production builds
 /build
+frontend/build/
 dist/
 
 # Environment files
@@ -69,6 +70,10 @@ chainlit.md
 
 # Data and databases
 agenthub/agents/youtube/db
+uploads/*
+backend/uploads/*
+!uploads/.gitkeep
+!backend/uploads/.gitkeep
 
 # Archive files and large assets
 **/*.zip

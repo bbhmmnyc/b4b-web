@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/config';
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
@@ -158,7 +159,7 @@ export default function WritePage() {
       }
 
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       if (isEditing && editId) {
         await axios.put(`${API}/posts/${editId}`, payload, { headers });
         toast.success('Post updated!');
@@ -231,7 +232,7 @@ export default function WritePage() {
               <Label className="text-xs font-bold uppercase tracking-wider text-brand-grey">Cover Image</Label>
               {coverImage ? (
                 <div className="relative mt-2 overflow-hidden border border-[#E5E5E5]">
-                  <img src={`${process.env.REACT_APP_BACKEND_URL}${coverImage}`} alt="Cover" className="w-full h-48 object-cover" data-testid="cover-image-preview" />
+                  <img src={`${BACKEND_URL}${coverImage}`} alt="Cover" className="w-full h-48 object-cover" data-testid="cover-image-preview" />
                   <button type="button" onClick={() => setCoverImage(null)} className="absolute top-2 right-2 bg-[#1A1A1A]/60 hover:bg-[#1A1A1A]/80 text-white p-1.5 transition-colors" data-testid="cover-image-remove">
                     <X className="w-4 h-4" />
                   </button>

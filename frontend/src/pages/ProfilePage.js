@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/config';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -61,7 +62,7 @@ function ColorPicker({ label, value, onChange, testId }) {
 }
 
 function getWsUrl() {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+  const backendUrl = BACKEND_URL || '';
   return backendUrl.replace(/^http/, 'ws');
 }
 

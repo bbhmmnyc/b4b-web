@@ -1,3 +1,4 @@
+import { BACKEND_URL } from '@/config';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
@@ -6,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
 function getWsUrl() {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+  const backendUrl = BACKEND_URL || '';
   return backendUrl.replace(/^http/, 'ws');
 }
 

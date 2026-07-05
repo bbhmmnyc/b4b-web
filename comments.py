@@ -78,32 +78,23 @@ async def create_comment(post_id: str, comment: CommentCreate, user=Depends(get_
         if mentioned_user:
             mentioned_user_ids.append(mentioned_user["id"])
 
+    author_name = comment.author_name or (user["name"] if user else None)
+    author_city = comment.author_city or (user["city"] if user else "")
+    author_country = comment.author_country or (user["country"] if user else "")
+
+    if not author_name:
+        raise HTTPException(status_code=400, detail="Comment author name is required")
+
+    if not user and not author_city:
+        raise HTTPException(status_code=400, detail="Guest comments require city")
+
     comment_doc = {
         "id": str(uuid.uuid4()),
         "post_id": post_id,
         "content": comment.content,
-       author_name = comment.author_name or (user["name"] if user else None)
-       author_city = comment.author_city or (user["city"] if user else "")
-       author_country = comment.author_country or (user["country"] if user else "")
-
-if not author_name:
-    raise HTTPException(status_code=400, detail="Comment author name is required")
-
-if not user and not author_city:
-    raise HTTPException(status_code=400, detail="Guest comments require city")
-
-comment_doc = {
-    "id": str(uuid.uuid4()),
-    "post_id": post_id,
-    "content": comment.content,
-    "author_name": author_name,
-    "author_city": author_city,
-    "author_country": author_country or "Unknown",
-    "author_id": user["id"] if user else None,
-    "is_guest": user is None,
-    "mentions": mentioned_user_ids,
-    "created_at": datetime.now(timezone.utc).isoformat()
-}
+        "author_name": author_name,
+        "author_city": author_city,
+        "author_country": author_country or "Unknown",
         "author_id": user["id"] if user else None,
         "is_guest": user is None,
         "mentions": mentioned_user_ids,
