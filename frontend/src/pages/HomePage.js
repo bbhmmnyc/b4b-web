@@ -197,14 +197,26 @@ export default function HomePage() {
                   <Link to={`/category/${cat.slug}`} className="relative block overflow-hidden no-underline group transition-all duration-300 hover:-translate-y-1 rounded-xl" data-testid={`category-card-${cat.slug}`}>
                     <div
                       className="relative p-5 min-h-[150px] flex flex-col justify-between rounded-xl overflow-hidden transition-all duration-300"
-                      style={{ ...glassCard, borderLeft: `2px solid ${color.base}` }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.82)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.68)'; }}
+                      style={{
+                        background: `linear-gradient(145deg, ${color.cardFrom} 0%, ${color.cardTo} 100%)`,
+                        border: `1.5px solid ${color.cardFrom}`,
+                        borderLeft: `4px solid ${color.base}`,
+                        boxShadow: '0 4px 16px rgba(20,40,80,0.10)',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.boxShadow = '0 10px 26px rgba(20,40,80,0.18)';
+                        e.currentTarget.style.borderColor = color.base;
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.boxShadow = '0 4px 16px rgba(20,40,80,0.10)';
+                        e.currentTarget.style.borderColor = color.cardFrom;
+                        e.currentTarget.style.borderLeftColor = color.base;
+                      }}
                     >
                       <div>
                         <span className="mb-3 block" style={{ color: color.base }}>{CATEGORY_ICONS[cat.slug] || <BarChart3 className="w-5 h-5" />}</span>
-                        <h3 className="font-heading font-bold text-base mb-1" style={{ color: '#1A2A3C' }}>{cat.name}</h3>
-                        <p className="text-xs leading-relaxed line-clamp-2" style={{ color: '#4A5A70' }}>{cat.description}</p>
+                        <h3 className="font-heading font-bold text-base mb-1" style={{ color: '#07111F' }}>{cat.name}</h3>
+                        <p className="text-xs leading-relaxed line-clamp-2" style={{ color: '#10253A' }}>{cat.description}</p>
                       </div>
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-[10px] font-bold uppercase tracking-widest" style={{ ...MONO, color: color.base }}>{cat.post_count} posts</span>
