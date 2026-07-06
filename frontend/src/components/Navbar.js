@@ -36,17 +36,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
 
           <Link to="/" className="flex items-center no-underline shrink-0" data-testid="nav-logo">
-            <span
-              className="font-heading font-black text-xl tracking-tight"
-              style={{
-                background: 'linear-gradient(135deg, #1A3A6A 0%, #0A7A6A 50%, #1A4A8A 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              BLOGS4BLOCKS
-            </span>
+            <img
+              src="/b4b-logo.png"
+              alt="Blogs 4 Blocks"
+              className="h-9 md:h-11 w-auto"
+              style={{ maxWidth: '210px', objectFit: 'contain' }}
+            />
           </Link>
 
           <div className="hidden md:flex items-center gap-1">

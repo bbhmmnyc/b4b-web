@@ -72,24 +72,24 @@ export default function HomePage() {
     <div className="min-h-screen" data-testid="home-page">
 
       <section className="relative overflow-hidden" style={{ borderBottom: '1px solid rgba(30,50,80,0.10)' }} data-testid="hero-section">
-        <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-28">
-          <div className="flex flex-col-reverse lg:flex-row items-center gap-10 lg:gap-16">
+        <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-14 md:py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] items-center gap-10 lg:gap-20">
 
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
-              className="flex-1 text-center lg:text-left"
+              className="text-center lg:text-left"
             >
               <img
                 src="/b4b-logo.png"
                 alt="Blogs 4 Blocks - Global Marketing Forum"
-                className="w-full mb-6"
-                style={{ maxWidth: "480px" }}
+                className="w-full mb-8 mx-auto lg:mx-0"
+                style={{ maxWidth: "690px" }}
                 data-testid="hero-title"
               />
               <p className="text-base md:text-lg mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0"
-                style={{ color: "#2A3A52" }}>
+                style={{ color: "#061325" }}>
                 A global open forum where marketing professionals share strategies, insights, and real-world experiences from every corner of the world.
               </p>
               <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-10 mx-auto lg:mx-0" data-testid="hero-search-form">
@@ -139,19 +139,22 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="flex-shrink-0 w-56 sm:w-72 md:w-80 lg:w-[360px] flex flex-col items-center gap-4"
+              className="w-full flex flex-col items-center gap-6"
             >
-              <p className="text-center text-sm font-bold uppercase tracking-wide"
-                style={{ color: "#0A7A6A", lineHeight: "1.6" }}>
-                Marketing insights from around the world.<br />
-                From the people who work in them,<br />
-                city by city, block by block.
+              <p className="text-center text-base md:text-xl lg:text-2xl font-black uppercase"
+                style={{ color: "#050B14", lineHeight: "1.35", maxWidth: "520px" }}>
+                Marketing insights <br className="hidden sm:block" />
+                from around the world<br />
+                <span className="text-sm md:text-lg lg:text-xl font-extrabold">
+                  From the people who work in them,<br />
+                  city by city and block by block
+                </span>
               </p>
               <img
                 src="/icon-512.png"
                 alt="Global Marketing"
                 className="w-full h-auto"
-                style={{ transform: "scaleX(-1)", filter: "drop-shadow(0 8px 32px rgba(10,120,106,0.18))" }}
+                style={{ maxWidth: "440px", transform: "scaleX(-1)", filter: "drop-shadow(0 12px 38px rgba(10,120,106,0.22))" }}
                 data-testid="hero-logo"
               />
           </motion.div>

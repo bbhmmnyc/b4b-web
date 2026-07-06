@@ -14,7 +14,24 @@ body {
     radial-gradient(ellipse 68% 50% at 14% 4%, rgba(232, 240, 252, 0.68) 0%, transparent 52%),
     radial-gradient(ellipse 50% 58% at 90% 90%, rgba(180, 196, 218, 0.60) 0%, transparent 55%),
     linear-gradient(155deg, #D2DAE6 0%, #C2CEDC 38%, #CAD6E6 65%, #B8C6D4 100%);
-  color: #1A2A3C;
+  color: #07111F;
+}
+
+.text-slate-400,
+.text-slate-500,
+.text-slate-600,
+.text-brand-grey,
+.text-muted-foreground {
+  color: #172336 !important;
+}
+
+p,
+li,
+label,
+input,
+textarea,
+select {
+  color: #07111F;
 }
 
 h1,
