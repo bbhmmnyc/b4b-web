@@ -7,7 +7,9 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
 function getWsUrl() {
-  const backendUrl = BACKEND_URL || '';
+  const backendUrl =
+    BACKEND_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : '');
   return backendUrl.replace(/^http/, 'ws');
 }
 
@@ -46,7 +48,11 @@ export default function CommentSection({ postId }) {
     const wsUrl = `${getWsUrl()}/api/ws/comments/${postId}`;
     let ws;
     let pingInterval;
+    let reconnectTimer;
+    let shouldReconnect = true;
+
     const connect = () => {
+      if (!shouldReconnect) return;
       try {
         ws = new WebSocket(wsUrl);
         wsRef.current = ws;
@@ -66,12 +72,24 @@ export default function CommentSection({ postId }) {
             }
           } catch (e) {}
         };
-        ws.onclose = () => { setWsConnected(false); clearInterval(pingInterval); setTimeout(connect, 3000); };
+        ws.onclose = () => {
+          setWsConnected(false);
+          clearInterval(pingInterval);
+          if (shouldReconnect) reconnectTimer = setTimeout(connect, 3000);
+        };
         ws.onerror = () => { setWsConnected(false); ws.close(); };
-      } catch (e) { setWsConnected(false); }
+      } catch (e) {
+        setWsConnected(false);
+        if (shouldReconnect) reconnectTimer = setTimeout(connect, 3000);
+      }
     };
     connect();
-    return () => { clearInterval(pingInterval); if (ws) ws.close(); };
+    return () => {
+      shouldReconnect = false;
+      clearInterval(pingInterval);
+      clearTimeout(reconnectTimer);
+      if (ws) ws.close();
+    };
   }, [postId]);
 
   // @mention search

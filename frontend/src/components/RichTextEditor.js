@@ -9,6 +9,7 @@ import LinkExt from '@tiptap/extension-link';
 import Highlight from '@tiptap/extension-highlight';
 import ImageExt from '@tiptap/extension-image';
 import axios from 'axios';
+import { useApp } from '../context/AppContext';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3,
@@ -39,6 +40,7 @@ function ToolbarDivider() {
 
 export default function RichTextEditor({ content, onChange, placeholder = "Start writing..." }) {
   const fileInputRef = useRef(null);
+  const { token } = useApp();
 
   const editor = useEditor({
     extensions: [
@@ -48,7 +50,14 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
       Placeholder.configure({ placeholder }),
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      LinkExt.configure({ openOnClick: false, HTMLAttributes: { class: 'text-blue-500 underline' } }),
+      LinkExt.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-500 underline',
+          target: '_blank',
+          rel: 'noopener noreferrer nofollow',
+        },
+      }),
       Highlight.configure({ multicolor: false }),
       ImageExt.configure({ inline: false, allowBase64: false }),
     ],
@@ -75,7 +84,11 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
         window.alert('Please enter an http, https, or mailto link.');
         return;
       }
-      editor.chain().focus().extendMarkRange('link').setLink({ href: parsed.href, target: '_blank' }).run();
+      editor.chain().focus().extendMarkRange('link').setLink({
+        href: parsed.href,
+        target: '_blank',
+        rel: 'noopener noreferrer nofollow',
+      }).run();
     } catch {
       window.alert('Please enter a valid URL.');
     }
@@ -87,7 +100,9 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await axios.post(`${API}/upload`, formData);
+      const res = await axios.post(`${API}/upload`, formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const imageUrl = `${BACKEND_URL}${res.data.url}`;
       editor.chain().focus().setImage({ src: imageUrl }).run();
     } catch {

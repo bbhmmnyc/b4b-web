@@ -39,8 +39,8 @@ export default function Navbar() {
             <img
               src="/b4b-logo.png"
               alt="Blogs 4 Blocks"
-              className="h-9 md:h-11 w-auto"
-              style={{ maxWidth: '210px', objectFit: 'contain' }}
+              className="h-8 md:h-10 w-auto"
+              style={{ maxWidth: '190px', objectFit: 'contain' }}
             />
           </Link>
 
@@ -112,10 +112,10 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             <Button
               onClick={() => navigate('/write')}
-              className="rounded-none h-10 px-6 uppercase tracking-widest text-xs font-bold text-white"
+              className="rounded-none h-9 px-4 uppercase tracking-widest text-[11px] font-bold text-white"
               style={{
                 background: 'linear-gradient(155deg, #C42838 0%, #A01E2C 48%, #7E1420 100%)',
                 boxShadow: '0 2px 14px rgba(160,30,44,0.35), inset 0 1px 0 rgba(255,255,255,0.22)',
@@ -188,7 +188,7 @@ export default function Navbar() {
               <Button
                 variant="outline"
                 onClick={() => navigate('/auth')}
-                className="rounded-none h-10 px-6 uppercase tracking-widest text-xs font-bold"
+                className="rounded-none h-9 px-4 uppercase tracking-widest text-[11px] font-bold"
                 style={{
                   background: 'rgba(255,255,255,0.58)',
                   border: '1px solid rgba(30,50,80,0.22)',

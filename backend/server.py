@@ -95,7 +95,12 @@ async def startup():
     await db.posts.create_index("category_slug")
     await db.posts.create_index("created_at")
     await db.posts.create_index("author_id")
+    await db.posts.create_index("expires_at")
+    await db.posts.create_index([("is_featured", 1), ("created_at", -1)])
+    await db.posts.create_index([("is_sponsored", 1), ("created_at", -1)])
+    await db.posts.create_index([("category_slug", 1), ("created_at", -1)])
     await db.comments.create_index("post_id")
+    await db.comments.create_index([("post_id", 1), ("created_at", 1)])
     await db.users.create_index("email", unique=True)
     await db.user_likes.create_index([("user_id", 1), ("post_id", 1)], unique=True)
     await db.user_prefs.create_index("user_id", unique=True)
@@ -146,23 +151,27 @@ async def startup():
             await db.posts.insert_one(post_doc)
         logger.info(f"Auto-seeded {len(SEED_POSTS)} blog posts")
 
-    # Start the weekly digest scheduler
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(
-        _send_weekly_digest,
-        'cron',
-        day_of_week='mon',
-        hour=9,
-        minute=0,
-        timezone='UTC',
-        id='weekly_digest',
-        replace_existing=True,
-        misfire_grace_time=3600
-    )
-    scheduler.start()
-    logger.info("Weekly digest scheduler started — runs every Monday at 9:00 AM UTC")
+    if os.environ.get("ENABLE_SCHEDULER", "false").lower() == "true":
+        scheduler = AsyncIOScheduler()
+        scheduler.add_job(
+            _send_weekly_digest,
+            "cron",
+            day_of_week="mon",
+            hour=9,
+            minute=0,
+            timezone="UTC",
+            id="weekly_digest",
+            replace_existing=True,
+            misfire_grace_time=3600,
+        )
+        scheduler.start()
+        app.state.scheduler = scheduler
+        logger.info("Weekly digest scheduler started — runs every Monday at 9:00 AM UTC")
 
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    scheduler = getattr(app.state, "scheduler", None)
+    if scheduler:
+        scheduler.shutdown(wait=False)
     client.close()

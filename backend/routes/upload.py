@@ -1,7 +1,8 @@
 import uuid
 from pathlib import Path
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 import aiofiles
+from auth import require_user
 
 router = APIRouter()
 
@@ -18,7 +19,7 @@ MAX_UPLOAD_SIZE = 5 * 1024 * 1024
 
 
 @router.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...), user=Depends(require_user)):
     ext = ALLOWED_CONTENT_TYPES.get(file.content_type)
     if not ext:
         raise HTTPException(status_code=400, detail="File type not allowed")

@@ -72,26 +72,37 @@ export default function HomePage() {
     <div className="min-h-screen" data-testid="home-page">
 
       <section className="relative overflow-hidden" style={{ borderBottom: '1px solid rgba(30,50,80,0.10)' }} data-testid="hero-section">
-        <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-14 md:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr] items-center gap-10 lg:gap-20">
+        <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+          >
+            <div className="w-full lg:w-[68%] text-center mb-5">
+              <p className="text-xl md:text-2xl lg:text-3xl font-black uppercase leading-tight" style={{ color: "#050B14" }}>
+                An open global forum where marketing professionals share global marketing insights
+              </p>
+              <p className="mt-3 text-base md:text-lg lg:text-xl font-extrabold uppercase leading-snug" style={{ color: "#050B14" }}>
+                From the people who work in them,<br />
+                city by city and block by block
+              </p>
+            </div>
 
+            <img
+              src="/b4b-logo.png"
+              alt="Blogs 4 Blocks - Global Marketing Forum"
+              className="w-[108%] lg:w-[118%] max-w-none h-auto mb-10 -ml-[4%] lg:-ml-[9%]"
+              data-testid="hero-title"
+            />
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-10 lg:gap-16">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: 0.7, delay: 0.12 }}
               className="text-center lg:text-left"
             >
-              <img
-                src="/b4b-logo.png"
-                alt="Blogs 4 Blocks - Global Marketing Forum"
-                className="w-full mb-8 mx-auto lg:mx-0"
-                style={{ maxWidth: "690px" }}
-                data-testid="hero-title"
-              />
-              <p className="text-base md:text-lg mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0"
-                style={{ color: "#061325" }}>
-                A global open forum where marketing professionals share strategies, insights, and real-world experiences from every corner of the world.
-              </p>
               <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-10 mx-auto lg:mx-0" data-testid="hero-search-form">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#6A7A90" }} />
@@ -139,24 +150,35 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.7, delay: 0.2 }}
-              className="w-full flex flex-col items-center gap-6"
+              className="w-full flex flex-col items-center"
             >
-              <p className="text-center text-base md:text-xl lg:text-2xl font-black uppercase"
-                style={{ color: "#050B14", lineHeight: "1.35", maxWidth: "520px" }}>
-                Marketing insights <br className="hidden sm:block" />
-                from around the world<br />
-                <span className="text-sm md:text-lg lg:text-xl font-extrabold">
-                  From the people who work in them,<br />
-                  city by city and block by block
-                </span>
-              </p>
-              <img
-                src="/icon-512.png"
-                alt="Global Marketing"
-                className="w-full h-auto"
-                style={{ maxWidth: "440px", transform: "scaleX(-1)", filter: "drop-shadow(0 12px 38px rgba(10,120,106,0.22))" }}
-                data-testid="hero-logo"
-              />
+              <div
+                className="w-full max-w-lg p-6 text-left"
+                style={{ ...glassCard, borderRadius: 0, borderTop: "3px solid #A01E2C" }}
+                data-testid="blog-of-week"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.28em] mb-3" style={{ ...MONO, color: "#A01E2C" }}>
+                  // Blog of the Week
+                </p>
+                {posts[0] ? (
+                  <Link to={`/post/${posts[0].id}`} className="group block no-underline">
+                    <h2 className="font-heading text-xl md:text-2xl font-bold leading-tight mb-2" style={{ color: "#1A2A3C" }}>
+                      {posts[0].title}
+                    </h2>
+                    <p className="text-sm leading-relaxed line-clamp-2 mb-4" style={{ color: "#4A5A70" }}>
+                      {posts[0].excerpt}
+                    </p>
+                    <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest" style={{ color: "#0A7A6A" }}>
+                      Read this week’s feature <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </Link>
+                ) : (
+                  <div>
+                    <h2 className="font-heading text-xl font-bold mb-2" style={{ color: "#1A2A3C" }}>This week’s feature is coming soon.</h2>
+                    <p className="text-sm" style={{ color: "#4A5A70" }}>A standout community perspective will appear here.</p>
+                  </div>
+                )}
+              </div>
           </motion.div>
           </div>
           {stats && (

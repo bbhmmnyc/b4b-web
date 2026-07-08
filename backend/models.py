@@ -1,13 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 
 
 class UserCreate(BaseModel):
-    name: str
-    email: str
-    password: str
-    city: str
-    country: str
+    name: str = Field(..., min_length=2, max_length=80)
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=128)
+    city: str = Field(..., min_length=2, max_length=80)
+    country: str = Field(..., min_length=2, max_length=80)
 
 class UserLogin(BaseModel):
     email: str
@@ -28,15 +28,15 @@ class GuestAuthor(BaseModel):
     country: str
 
 class PostCreate(BaseModel):
-    title: str
-    content: str
-    excerpt: str
-    category_slug: str
-    subcategory: Optional[str] = None
-    tags: List[str] = []
-    cover_image: Optional[str] = None
+    title: str = Field(..., min_length=3, max_length=140)
+    content: str = Field(..., min_length=20, max_length=50000)
+    excerpt: str = Field(..., min_length=10, max_length=300)
+    category_slug: str = Field(..., min_length=2, max_length=80)
+    subcategory: Optional[str] = Field(default=None, max_length=80)
+    tags: List[str] = Field(default_factory=list, max_length=10)
+    cover_image: Optional[str] = Field(default=None, max_length=500)
     guest_author: Optional[GuestAuthor] = None
-    co_authors: List[str] = []
+    co_authors: List[str] = Field(default_factory=list, max_length=10)
 
 class CommentCreate(BaseModel):
     content: str
@@ -79,10 +79,10 @@ class SponsorInfo(BaseModel):
     sponsor_logo: Optional[str] = None
 
 class AdInquiry(BaseModel):
-    company_name: str
-    contact_name: str
-    email: str
-    website: Optional[str] = None
-    budget_range: Optional[str] = None
-    message: str
-    preferred_categories: List[str] = []
+    company_name: str = Field(..., min_length=2, max_length=120)
+    contact_name: str = Field(..., min_length=2, max_length=120)
+    email: EmailStr
+    website: Optional[str] = Field(default=None, max_length=300)
+    budget_range: Optional[str] = Field(default=None, max_length=80)
+    message: str = Field(..., min_length=10, max_length=5000)
+    preferred_categories: List[str] = Field(default_factory=list, max_length=20)

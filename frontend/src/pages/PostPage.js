@@ -135,9 +135,15 @@ export default function PostPage() {
 
   const sanitizeHtml = (html) => DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
-    ADD_ATTR: ['target'],
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
+    ADD_ATTR: ['target', 'rel'],
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|\/)/i,
   });
+
+  const getAssetUrl = (url) => {
+    if (!url) return '';
+    if (/^https?:\/\//i.test(url)) return url;
+    return `${BACKEND_URL}${url}`;
+  };
 
   const isHtmlContent = (content) => {
     return content && (content.includes('<p>') || content.includes('<h') || content.includes('<ul>') || content.includes('<ol>') || content.includes('<blockquote>'));
@@ -231,7 +237,7 @@ export default function PostPage() {
         {post.cover_image && (
           <div className="overflow-hidden mb-10 border border-[#E5E5E5]" data-testid="post-cover-image">
             <img
-              src={`${BACKEND_URL}${post.cover_image}`}
+              src={getAssetUrl(post.cover_image)}
               alt={post.title}
               className="w-full h-auto max-h-[400px] object-cover"
             />

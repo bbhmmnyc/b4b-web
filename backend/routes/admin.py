@@ -13,10 +13,26 @@ async def self_promote_to_admin(req: AdminSetupRequest, user=Depends(require_use
     admin_key = os.environ.get("ADMIN_SETUP_KEY")
     if not admin_key:
         raise HTTPException(status_code=500, detail="Admin setup is not configured")
+
+    if await db.users.count_documents({"is_admin": True}) > 0:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin setup is already complete. Use the admin dashboard to manage admins.",
+        )
+
     if req.secret_key != admin_key:
         raise HTTPException(status_code=403, detail="Invalid admin setup key")
-    await db.users.update_one({"id": user["id"]}, {"$set": {"is_admin": True}})
-    return {"message": "You are now an admin! Refresh the page to access the admin panel.", "is_admin": True}
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "is_admin": True,
+            "admin_created_at": datetime.now(timezone.utc).isoformat(),
+        }},
+    )
+    return {
+        "message": "First admin created. Remove ADMIN_SETUP_KEY from production after this.",
+        "is_admin": True,
+    }
 
 
 @router.get("/admin/stats")
@@ -282,6 +298,28 @@ async def set_sponsor(post_id: str, sponsor: dict, user=Depends(require_admin)):
         "sponsor_logo": sponsor.get("sponsor_logo", ""),
     }})
     return {"is_sponsored": True, "message": "Sponsor info updated"}
+
+
+@router.put("/admin/posts/{post_id}/feature")
+async def toggle_featured_post(post_id: str, user=Depends(require_admin)):
+    post = await db.posts.find_one(
+        {"id": post_id},
+        {"_id": 0, "is_featured": 1},
+    )
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    now = datetime.now(timezone.utc).isoformat()
+    new_status = not post.get("is_featured", False)
+    update = {"is_featured": new_status, "updated_at": now}
+    if new_status:
+        update["featured_at"] = now
+
+    await db.posts.update_one({"id": post_id}, {"$set": update})
+    return {
+        "is_featured": new_status,
+        "message": "Post featured" if new_status else "Post unfeatured",
+    }
 
 
 @router.get("/admin/ad-inquiries")

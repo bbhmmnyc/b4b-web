@@ -190,9 +190,7 @@ async def like_post(post_id: str, user=Depends(get_current_user)):
             updated = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
             return {"likes": updated["likes"], "liked": True}
     else:
-        await db.posts.update_one({"id": post_id}, {"$inc": {"likes": 1}})
-        updated = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
-        return {"likes": updated["likes"], "liked": True}
+        raise HTTPException(status_code=401, detail="Sign in to like posts")
 
 
 @router.get("/posts/{post_id}/liked")

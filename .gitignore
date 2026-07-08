@@ -37,6 +37,7 @@ dist/
 # Environment files
 *.env
 *.env.*
+!backend/.env.example
 
 # Credentials and tokens
 *token.json*
