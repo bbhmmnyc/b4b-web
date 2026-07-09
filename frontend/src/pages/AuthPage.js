@@ -16,7 +16,15 @@ export default function AuthPage() {
   const [error, setError] = useState('');
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  const [regForm, setRegForm] = useState({ name: '', email: '', password: '', city: '', country: '' });
+  const [regForm, setRegForm] = useState({
+    first_name: '',
+    last_name: '',
+    published_name: '',
+    email: '',
+    password: '',
+    city: '',
+    country: ''
+  });
 
   useEffect(() => {
     if (user) navigate('/');
@@ -39,7 +47,7 @@ export default function AuthPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
-    if (!regForm.name || !regForm.email || !regForm.password || !regForm.city) {
+    if (!regForm.first_name.trim() || !regForm.last_name.trim() || !regForm.email || !regForm.password || !regForm.city || !regForm.country) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -121,17 +129,44 @@ export default function AuthPage() {
 
             <TabsContent value="register">
               <form onSubmit={handleRegister} className="space-y-5" data-testid="register-form">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="reg-first-name" className="text-xs font-bold uppercase tracking-wider text-brand-grey">First Name *</Label>
+                    <Input
+                      id="reg-first-name"
+                      autoComplete="given-name"
+                      placeholder="First name"
+                      value={regForm.first_name}
+                      onChange={(e) => setRegForm(prev => ({ ...prev, first_name: e.target.value }))}
+                      className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
+                      data-testid="register-first-name-input"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="reg-last-name" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Last Name *</Label>
+                    <Input
+                      id="reg-last-name"
+                      autoComplete="family-name"
+                      placeholder="Last name"
+                      value={regForm.last_name}
+                      onChange={(e) => setRegForm(prev => ({ ...prev, last_name: e.target.value }))}
+                      className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
+                      data-testid="register-last-name-input"
+                    />
+                  </div>
+                </div>
                 <div>
-                  <Label htmlFor="reg-name" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Full Name *</Label>
+                  <Label htmlFor="reg-published-name" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Published Name / Alias</Label>
                   <Input
-                    id="reg-name"
-                    autoComplete="name"
-                    placeholder="Your name"
-                    value={regForm.name}
-                    onChange={(e) => setRegForm(prev => ({ ...prev, name: e.target.value }))}
+                    id="reg-published-name"
+                    autoComplete="nickname"
+                    placeholder="Optional public name shown on posts"
+                    value={regForm.published_name}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, published_name: e.target.value }))}
                     className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
-                    data-testid="register-name-input"
+                    data-testid="register-published-name-input"
                   />
+                  <p className="mt-1 text-[11px] text-brand-grey">Leave blank to publish under your first and last name.</p>
                 </div>
                 <div>
                   <Label htmlFor="reg-email" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Email *</Label>
@@ -172,7 +207,7 @@ export default function AuthPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="reg-country" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Country</Label>
+                    <Label htmlFor="reg-country" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Country *</Label>
                     <Input
                       id="reg-country"
                       placeholder="Your country"
@@ -204,7 +239,7 @@ export default function AuthPage() {
         </div>
 
         <p className="text-center text-xs text-brand-grey mt-8">
-          You can also post as a guest without an account. Guest posts are active for 30 days.
+          Sign in to upload images, like posts, and publish with links.
         </p>
       </div>
     </div>

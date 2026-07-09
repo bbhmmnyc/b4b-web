@@ -12,6 +12,10 @@ from websocket_manager import ws_manager
 router = APIRouter()
 
 
+def public_author_name(user):
+    return (user.get("published_name") or user.get("name") or "").strip()
+
+
 @router.get("/users/search")
 async def search_users(q: str, post_id: Optional[str] = None, limit: int = 8):
     """Search users by name for @mention autocomplete. Also includes post author & commenters."""
@@ -26,9 +30,10 @@ async def search_users(q: str, post_id: Optional[str] = None, limit: int = 8):
     if post_id:
         post = await db.posts.find_one({"id": post_id}, {"_id": 0, "author_name": 1, "author_id": 1, "author_city": 1})
         if post and post.get("author_id"):
-            author = await db.users.find_one({"id": post["author_id"]}, {"_id": 0, "id": 1, "name": 1, "city": 1})
-            if author and author["name"].lower().startswith(q.lower()):
-                results.append({"id": author["id"], "name": author["name"], "city": author.get("city", "")})
+            author = await db.users.find_one({"id": post["author_id"]}, {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1})
+            author_public_name = public_author_name(author) if author else ""
+            if author and author_public_name.lower().startswith(q.lower()):
+                results.append({"id": author["id"], "name": author_public_name, "city": author.get("city", "")})
                 seen_ids.add(author["id"])
         # Get commenters on this post
         comments = await db.comments.find({"post_id": post_id, "author_id": {"$ne": None}}, {"_id": 0, "author_id": 1, "author_name": 1}).to_list(100)
@@ -45,12 +50,15 @@ async def search_users(q: str, post_id: Optional[str] = None, limit: int = 8):
     if len(results) < limit:
         remaining = limit - len(results)
         users = await db.users.find(
-            {"name": {"$regex": f"^{re.escape(q)}", "$options": "i"}},
-            {"_id": 0, "id": 1, "name": 1, "city": 1}
+            {"$or": [
+                {"name": {"$regex": f"^{re.escape(q)}", "$options": "i"}},
+                {"published_name": {"$regex": f"^{re.escape(q)}", "$options": "i"}},
+            ]},
+            {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1}
         ).limit(remaining + len(seen_ids)).to_list(remaining + len(seen_ids))
         for u in users:
             if u["id"] not in seen_ids:
-                results.append({"id": u["id"], "name": u["name"], "city": u.get("city", "")})
+                results.append({"id": u["id"], "name": public_author_name(u), "city": u.get("city", "")})
                 seen_ids.add(u["id"])
             if len(results) >= limit:
                 break
@@ -78,7 +86,7 @@ async def create_comment(post_id: str, comment: CommentCreate, user=Depends(get_
         if mentioned_user:
             mentioned_user_ids.append(mentioned_user["id"])
 
-    author_name = comment.author_name or (user["name"] if user else None)
+    author_name = comment.author_name or (public_author_name(user) if user else None)
     author_city = comment.author_city or (user["city"] if user else "")
     author_country = comment.author_country or (user["country"] if user else "")
 

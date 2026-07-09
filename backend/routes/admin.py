@@ -43,6 +43,8 @@ async def admin_stats(user=Depends(require_admin)):
     total_users = await db.users.count_documents({})
     total_categories = await db.categories.count_documents({"status": "approved"})
     pending_categories = await db.categories.count_documents({"status": "pending"})
+    countries = await db.users.distinct("country", {"country": {"$nin": [None, "", "Unknown"]}})
+    countries_represented = len(countries)
     one_week_ago = (now - timedelta(days=7)).isoformat()
     new_posts_week = await db.posts.count_documents({"created_at": {"$gte": one_week_ago}})
     new_users_week = await db.users.count_documents({"created_at": {"$gte": one_week_ago}})
@@ -54,6 +56,8 @@ async def admin_stats(user=Depends(require_admin)):
         "total_comments": total_comments,
         "total_users": total_users,
         "total_categories": total_categories,
+        "approved_categories": total_categories,
+        "countries_represented": countries_represented,
         "pending_categories": pending_categories,
         "new_posts_week": new_posts_week,
         "new_users_week": new_users_week,

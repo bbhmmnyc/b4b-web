@@ -103,14 +103,21 @@ export default function WritePage() {
   const handleCoverUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!token) {
+      setError('Please sign in to upload images.');
+      e.target.value = '';
+      return;
+    }
     setCoverUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await axios.post(`${API}/upload`, formData);
+      const res = await axios.post(`${API}/upload`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCoverImage(res.data.url);
     } catch (err) {
-      setError('Failed to upload cover image. Max size is 5MB.');
+      setError(err.response?.data?.detail || 'Failed to upload cover image. Max size is 5MB.');
     }
     setCoverUploading(false);
     e.target.value = '';
@@ -137,6 +144,11 @@ export default function WritePage() {
 
     if (!user && (!guestData.name.trim() || !guestData.city.trim())) {
       setError('Guest posts require your name and city.');
+      return;
+    }
+
+    if (!user && /(<a\b|href\s*=|https?:\/\/|www\.)/i.test(formData.content)) {
+      setError('Guest posts cannot include links. Please sign in or register to publish posts with links.');
       return;
     }
 
@@ -196,7 +208,7 @@ export default function WritePage() {
             <AlertCircle className="w-5 h-5 text-[#92400E] flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-[#92400E]">Posting as a guest</p>
-              <p className="text-xs text-[#92400E]/70 mt-0.5">Guest posts are active for 30 days. <a href="/auth" className="underline font-semibold">Sign up</a> for a permanent presence!</p>
+              <p className="text-xs text-[#92400E]/70 mt-0.5">Guest posts are active for 30 days and cannot include links. <a href="/auth" className="underline font-semibold">Sign up</a> to publish with links and keep a permanent presence!</p>
             </div>
           </div>
         )}

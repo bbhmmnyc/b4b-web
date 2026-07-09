@@ -11,6 +11,14 @@ from email_service import notify_new_post_to_all_users
 router = APIRouter()
 
 
+def public_author_name(user):
+    return (user.get("published_name") or user.get("name") or "").strip()
+
+
+def guest_content_has_links(content: str) -> bool:
+    return bool(re.search(r'(<a\b|href\s*=|https?://|www\.)', content or "", re.IGNORECASE))
+
+
 @router.get("/posts")
 async def get_posts(
     category: Optional[str] = None,
@@ -134,13 +142,16 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
         "updated_at": now
     }
     if is_guest:
+        if guest_content_has_links(post.content):
+            raise HTTPException(status_code=400, detail="Guest posts cannot include links. Please register or sign in to publish posts with links.")
         post_doc["author_name"] = post.guest_author.name
         post_doc["author_city"] = post.guest_author.city
         post_doc["author_country"] = post.guest_author.country
         post_doc["author_id"] = None
         post_doc["expires_at"] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
     elif user:
-        post_doc["author_name"] = user["name"]
+        post_doc["author_name"] = public_author_name(user)
+        post_doc["author_registered_name"] = user.get("name", "")
         post_doc["author_city"] = user["city"]
         post_doc["author_country"] = user["country"]
         post_doc["author_id"] = user["id"]
@@ -157,9 +168,9 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
                     ]
                 })
                 if partnership:
-                    ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "city": 1, "country": 1})
+                    ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1, "country": 1})
                     if ca_user:
-                        co_author_docs.append({"id": ca_user["id"], "name": ca_user["name"], "city": ca_user["city"], "country": ca_user["country"]})
+                        co_author_docs.append({"id": ca_user["id"], "name": public_author_name(ca_user), "registered_name": ca_user.get("name", ""), "city": ca_user["city"], "country": ca_user["country"]})
             post_doc["co_authors"] = co_author_docs
     else:
         raise HTTPException(status_code=400, detail="Must provide guest author info or be logged in")
@@ -215,9 +226,9 @@ async def update_post(post_id: str, update: PostUpdate, user=Depends(require_use
         co_author_docs = []
         for ca_id in update_fields["co_authors"]:
             if isinstance(ca_id, str):
-                ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "city": 1, "country": 1})
+                ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1, "country": 1})
                 if ca_user:
-                    co_author_docs.append({"id": ca_user["id"], "name": ca_user["name"], "city": ca_user["city"], "country": ca_user["country"]})
+                    co_author_docs.append({"id": ca_user["id"], "name": public_author_name(ca_user), "registered_name": ca_user.get("name", ""), "city": ca_user["city"], "country": ca_user["country"]})
         update_fields["co_authors"] = co_author_docs
     update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.posts.update_one({"id": post_id}, {"$set": update_fields})

@@ -425,12 +425,12 @@ export default function AdminPage() {
               <StatCard icon={<FileText className="w-5 h-5" />} value={stats.total_posts} label="Total Posts" color="#3B82F6" />
               <StatCard icon={<MessageCircle className="w-5 h-5" />} value={stats.total_comments} label="Total Comments" color="#22C55E" />
               <StatCard icon={<Users className="w-5 h-5" />} value={stats.total_users} label="Registered Users" color="#A855F7" />
-              <StatCard icon={<Globe className="w-5 h-5" />} value={stats.countries_represented} label="Countries" color="#F97316" />
+              <StatCard icon={<Globe className="w-5 h-5" />} value={stats.countries_represented || 0} label="Countries" color="#F97316" />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard icon={<Tag className="w-5 h-5" />} value={stats.approved_categories} label="Active Topics" color="#14B8A6" />
-              <StatCard icon={<Clock className="w-5 h-5" />} value={stats.pending_categories} label="Pending Topics" color="#D97706" />
-              <StatCard icon={<AlertTriangle className="w-5 h-5" />} value={stats.guest_posts} label="Guest Posts" color="#EF4444" />
+              <StatCard icon={<Tag className="w-5 h-5" />} value={stats.approved_categories ?? stats.total_categories ?? 0} label="Active Topics" color="#14B8A6" />
+              <StatCard icon={<Clock className="w-5 h-5" />} value={stats.pending_categories || 0} label="Pending Topics" color="#D97706" />
+              <StatCard icon={<AlertTriangle className="w-5 h-5" />} value={stats.guest_posts || 0} label="Guest Posts" color="#EF4444" />
               <StatCard icon={<Shield className="w-5 h-5" />} value={users.filter(u => u.is_admin).length} label="Admins" color="#6366F1" />
             </div>
           </div>
