@@ -312,7 +312,7 @@ export default function WritePage() {
             <div>
               <Label htmlFor="content" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Content *</Label>
               <div className="mt-2">
-                <RichTextEditor content={formData.content} onChange={(html) => setFormData(prev => ({ ...prev, content: html }))} placeholder="Share your marketing strategy, experience, data, and insights." />
+                <RichTextEditor content={formData.content} onChange={(html) => setFormData(prev => ({ ...prev, content: html }))} placeholder="Share your marketing strategy, experience, data, and insights that are local to your city, region, state, or country." />
               </div>
             </div>
 
