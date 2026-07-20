@@ -150,6 +150,12 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
         post_doc["author_id"] = None
         post_doc["expires_at"] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
     elif user:
+        if user.get("is_suspended"):
+            raise HTTPException(status_code=403, detail="This account has been suspended.")
+        if not user.get("email_verified") and not user.get("is_admin"):
+            raise HTTPException(status_code=403, detail="Please verify your email before publishing posts.")
+        if not user.get("is_approved") and not user.get("is_admin"):
+            raise HTTPException(status_code=403, detail="Your account is registered, but blog posting requires admin approval. You can still comment while approval is pending.")
         post_doc["author_name"] = public_author_name(user)
         post_doc["author_registered_name"] = user.get("name", "")
         post_doc["author_city"] = user["city"]
@@ -189,6 +195,8 @@ async def like_post(post_id: str, user=Depends(get_current_user)):
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if user:
+        if user.get("is_suspended"):
+            raise HTTPException(status_code=403, detail="This account has been suspended.")
         existing = await db.user_likes.find_one({"user_id": user["id"], "post_id": post_id})
         if existing:
             await db.user_likes.delete_one({"user_id": user["id"], "post_id": post_id})

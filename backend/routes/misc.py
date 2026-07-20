@@ -43,8 +43,18 @@ async def seed_data(user=Depends(require_admin)):
 async def get_stats():
     total_posts = await db.posts.count_documents({})
     total_comments = await db.comments.count_documents({})
-    total_users = await db.users.count_documents({})
-    countries_pipeline = [{"$group": {"_id": "$author_country"}}, {"$count": "count"}]
-    countries_result = await db.posts.aggregate(countries_pipeline).to_list(1)
-    total_countries = countries_result[0]["count"] if countries_result else 0
-    return {"total_posts": total_posts, "total_comments": total_comments, "total_users": total_users, "total_countries": total_countries}
+    total_registered_users = await db.users.count_documents({})
+    contributor_ids = await db.posts.distinct("author_id", {"author_id": {"$nin": [None, ""]}})
+    total_contributors = len(contributor_ids)
+    user_countries = await db.users.distinct("country", {"country": {"$nin": [None, "", "Unknown"]}})
+    post_countries = await db.posts.distinct("author_country", {"author_country": {"$nin": [None, "", "Unknown"]}})
+    comment_countries = await db.comments.distinct("author_country", {"author_country": {"$nin": [None, "", "Unknown"]}})
+    countries = {c.strip() for c in [*user_countries, *post_countries, *comment_countries] if isinstance(c, str) and c.strip()}
+    return {
+        "total_posts": total_posts,
+        "total_comments": total_comments,
+        "total_users": total_contributors,
+        "total_registered_users": total_registered_users,
+        "total_contributors": total_contributors,
+        "total_countries": len(countries),
+    }

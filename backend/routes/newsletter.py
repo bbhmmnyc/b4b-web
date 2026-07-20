@@ -1,5 +1,6 @@
 import os
 import hashlib
+import html as html_lib
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter
 from database import db
@@ -34,17 +35,26 @@ async def newsletter_unsubscribe(data: NewsletterSubscribe):
     return {"message": "You've been unsubscribed", "unsubscribed": True}
 
 
-async def _send_weekly_digest():
+async def _send_weekly_digest(selected_post_ids=None, intro_note=None):
     """Generate and send weekly digest to all active subscribers"""
     one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     now_iso = datetime.now(timezone.utc).isoformat()
     digest_id = now_iso[:10]
     site_url = os.environ.get('SITE_URL', '')
 
-    top_posts = await db.posts.find(
-        {"created_at": {"$gte": one_week_ago}, "$or": [{"expires_at": None}, {"expires_at": {"$exists": False}}, {"expires_at": {"$gt": now_iso}}]},
-        {"_id": 0}
-    ).sort([("likes", -1), ("views", -1)]).limit(5).to_list(5)
+    active_filter = {"$or": [{"expires_at": None}, {"expires_at": {"$exists": False}}, {"expires_at": {"$gt": now_iso}}]}
+    if selected_post_ids:
+        top_posts = await db.posts.find(
+            {"id": {"$in": selected_post_ids}, **active_filter},
+            {"_id": 0}
+        ).to_list(10)
+        order = {post_id: index for index, post_id in enumerate(selected_post_ids)}
+        top_posts.sort(key=lambda p: order.get(p["id"], 999))
+    else:
+        top_posts = await db.posts.find(
+            {"created_at": {"$gte": one_week_ago}, **active_filter},
+            {"_id": 0}
+        ).sort([("likes", -1), ("views", -1)]).limit(5).to_list(5)
 
     if not top_posts:
         await db.digest_log.insert_one({
@@ -67,6 +77,9 @@ async def _send_weekly_digest():
 
     post_count = await db.posts.count_documents({"created_at": {"$gte": one_week_ago}})
     new_comments = await db.comments.count_documents({"created_at": {"$gte": one_week_ago}})
+    safe_intro_note = ""
+    if intro_note:
+        safe_intro_note = html_lib.escape(intro_note).replace("\n", "<br />")
 
     sent_count = 0
     errors = 0
@@ -100,6 +113,7 @@ async def _send_weekly_digest():
           </div>
           <h2 style="color: #0F172A; font-size: 18px; margin-bottom: 6px;">This Week on Blogs 4 Blocks</h2>
           <p style="color: #64748B; font-size: 14px; margin-bottom: 16px;">{post_count} new posts &middot; {new_comments} new comments</p>
+          {f'<div style="background:#F8FAFC;border-left:4px solid #0A7A6A;padding:14px 16px;margin:16px 0;color:#334155;font-size:14px;line-height:1.6;">{safe_intro_note}</div>' if safe_intro_note else ''}
           <h3 style="color: #0F172A; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Top Posts This Week</h3>
           {posts_html}
           <p style="color: #94A3B8; font-size: 11px; margin-top: 24px; text-align: center;">You're receiving this as a Blogs 4 Blocks community member.</p>
@@ -117,6 +131,8 @@ async def _send_weekly_digest():
         "recipients": sent_count,
         "errors": errors,
         "posts_included": len(top_posts),
+        "selected_post_ids": [p["id"] for p in top_posts],
+        "has_intro_note": bool(intro_note),
         "status": "sent"
     })
 

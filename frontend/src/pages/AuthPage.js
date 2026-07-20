@@ -54,7 +54,7 @@ export default function AuthPage() {
     setLoading(true);
     try {
       await register(regForm);
-      toast.success('Welcome to Blogs 4 Blocks!');
+      toast.success('Account created. Please verify your email; blog posting opens after admin approval.');
       navigate('/');
     } catch (e) {
       setError(e.response?.data?.detail || 'Registration failed');
@@ -180,6 +180,7 @@ export default function AuthPage() {
                     className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                     data-testid="register-email-input"
                   />
+                  <p className="mt-1 text-[11px] text-brand-grey">We’ll send a verification link to this email.</p>
                 </div>
                 <div>
                   <Label htmlFor="reg-password" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Password *</Label>
@@ -239,7 +240,7 @@ export default function AuthPage() {
         </div>
 
         <p className="text-center text-xs text-brand-grey mt-8">
-          Sign in to upload images, like posts, and publish with links.
+          Sign in to upload images, like posts, comment, and publish approved posts with links.
         </p>
       </div>
     </div>

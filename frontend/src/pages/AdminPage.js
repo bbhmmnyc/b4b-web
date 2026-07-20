@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Textarea } from '../components/ui/textarea';
 import { toast } from 'sonner';
 
 function StatCard({ icon, value, label, color }) {
@@ -155,14 +156,27 @@ function RecentCommentRow({ comment, onDelete }) {
   );
 }
 
-function UserRow({ u, currentUserId, onToggleAdmin }) {
+function UserRow({ u, currentUserId, onToggleAdmin, onSetApproval, onSetSuspension }) {
   const [loading, setLoading] = useState(false);
+  const [moderating, setModerating] = useState(false);
   const isSelf = u.id === currentUserId;
 
   const handleToggle = async () => {
     setLoading(true);
     await onToggleAdmin(u.id, u.is_admin);
     setLoading(false);
+  };
+
+  const handleApproval = async () => {
+    setModerating(true);
+    await onSetApproval(u.id, !u.is_approved);
+    setModerating(false);
+  };
+
+  const handleSuspension = async () => {
+    setModerating(true);
+    await onSetSuspension(u.id, !u.is_suspended);
+    setModerating(false);
   };
 
   return (
@@ -174,22 +188,47 @@ function UserRow({ u, currentUserId, onToggleAdmin }) {
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-[#1A1A1A]">{u.name}</span>
           {u.is_admin && <Badge className="text-xs bg-indigo-100 text-indigo-700 border-0 py-0 h-4">admin</Badge>}
+          {u.is_approved ? <Badge className="text-xs bg-green-100 text-green-700 border-0 py-0 h-4">approved</Badge> : <Badge className="text-xs bg-amber-100 text-amber-700 border-0 py-0 h-4">pending posting</Badge>}
+          {u.email_verified ? <Badge className="text-xs bg-blue-100 text-blue-700 border-0 py-0 h-4">verified</Badge> : <Badge className="text-xs bg-gray-100 text-gray-600 border-0 py-0 h-4">email unverified</Badge>}
+          {u.is_suspended && <Badge className="text-xs bg-red-100 text-red-700 border-0 py-0 h-4">suspended</Badge>}
           {isSelf && <Badge className="text-xs bg-[#F4F4F5] text-brand-grey border-0 py-0 h-4">you</Badge>}
         </div>
         <div className="text-xs text-gray-400">{u.email} — {u.city}, {u.country}</div>
       </div>
       <span className="text-xs text-gray-400 flex-shrink-0 mr-2">{new Date(u.created_at).toLocaleDateString()}</span>
       {!isSelf && (
-        <Button
-          size="sm"
-          variant={u.is_admin ? "outline" : "default"}
-          disabled={loading}
-          onClick={handleToggle}
-          className={`h-7 text-xs rounded-full flex-shrink-0 ${u.is_admin ? 'border-red-200 text-red-600 hover:bg-red-50' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
-          data-testid={`toggle-admin-${u.id}`}
-        >
-          {loading ? '...' : u.is_admin ? 'Remove Admin' : 'Make Admin'}
-        </Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            size="sm"
+            variant={u.is_approved ? "outline" : "default"}
+            disabled={moderating}
+            onClick={handleApproval}
+            className={`h-7 text-xs rounded-full ${u.is_approved ? 'border-amber-200 text-amber-700 hover:bg-amber-50' : 'bg-green-600 hover:bg-green-700 text-white'}`}
+            data-testid={`toggle-approval-${u.id}`}
+          >
+            {u.is_approved ? 'Unapprove' : 'Approve Posts'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={moderating}
+            onClick={handleSuspension}
+            className={`h-7 text-xs rounded-full ${u.is_suspended ? 'border-green-200 text-green-700 hover:bg-green-50' : 'border-red-200 text-red-600 hover:bg-red-50'}`}
+            data-testid={`toggle-suspension-${u.id}`}
+          >
+            {u.is_suspended ? 'Restore' : 'Suspend'}
+          </Button>
+          <Button
+            size="sm"
+            variant={u.is_admin ? "outline" : "default"}
+            disabled={loading}
+            onClick={handleToggle}
+            className={`h-7 text-xs rounded-full ${u.is_admin ? 'border-red-200 text-red-600 hover:bg-red-50' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
+            data-testid={`toggle-admin-${u.id}`}
+          >
+            {loading ? '...' : u.is_admin ? 'Remove Admin' : 'Make Admin'}
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -208,6 +247,8 @@ export default function AdminPage() {
   const [sendingDigest, setSendingDigest] = useState(false);
   const [analytics, setAnalytics] = useState(null);
   const [allPosts, setAllPosts] = useState([]);
+  const [selectedDigestPosts, setSelectedDigestPosts] = useState([]);
+  const [digestIntro, setDigestIntro] = useState('');
   const [adInquiries, setAdInquiries] = useState([]);
   const [campaigns, setCampaigns] = useState(null);
 
@@ -306,13 +347,50 @@ export default function AdminPage() {
     }
   };
 
+  const handleSetUserApproval = async (userId, isApproved) => {
+    try {
+      const res = await axios.put(`${API}/admin/users/${userId}/approval`, { is_approved: isApproved }, { headers: headers() });
+      toast.success(res.data.message);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_approved: res.data.is_approved } : u));
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to update posting approval');
+    }
+  };
+
+  const handleSetUserSuspension = async (userId, isSuspended) => {
+    try {
+      const res = await axios.put(`${API}/admin/users/${userId}/suspension`, { is_suspended: isSuspended }, { headers: headers() });
+      toast.success(res.data.message);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_suspended: res.data.is_suspended } : u));
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to update suspension status');
+    }
+  };
+
+  const toggleDigestPost = (postId) => {
+    setSelectedDigestPosts(prev => (
+      prev.includes(postId)
+        ? prev.filter(id => id !== postId)
+        : [...prev, postId].slice(0, 5)
+    ));
+  };
+
   const handleSendDigest = async () => {
+    if (selectedDigestPosts.length === 0) {
+      toast.error('Select at least one post for the digest.');
+      return;
+    }
     setSendingDigest(true);
     try {
-      const res = await axios.post(`${API}/admin/send-digest`, {}, { headers: headers() });
+      const res = await axios.post(`${API}/admin/send-digest`, {
+        post_ids: selectedDigestPosts,
+        intro_note: digestIntro.trim() || null,
+      }, { headers: headers() });
       toast.success(res.data.message);
       const digestRes = await axios.get(`${API}/admin/digest-status`, { headers: headers() });
       setDigestStatus(digestRes.data);
+      setSelectedDigestPosts([]);
+      setDigestIntro('');
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Failed to send digest');
     }
@@ -741,7 +819,7 @@ export default function AdminPage() {
                   <h3 className="font-heading font-bold text-base text-[#1A1A1A]">Schedule</h3>
                 </div>
                 <p className="text-sm text-brand-grey mb-2">Automated digest runs <strong>every Monday at 9:00 AM UTC</strong>.</p>
-                <p className="text-xs text-gray-400">Includes registered users + newsletter subscribers. Top 5 posts from the past week are featured.</p>
+                <p className="text-xs text-gray-400">Includes registered users + newsletter subscribers. The manual send below uses posts selected by admin.</p>
               </div>
 
               <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
@@ -749,20 +827,53 @@ export default function AdminPage() {
                   <Send className="w-5 h-5 text-green-600" />
                   <h3 className="font-heading font-bold text-base text-[#1A1A1A]">Manual Send</h3>
                 </div>
-                <p className="text-sm text-brand-grey mb-4">Trigger a digest now to all subscribers. This will send the top posts from the past 7 days.</p>
+                <p className="text-sm text-brand-grey mb-4">Select up to 5 posts and add an optional intro note before sending.</p>
                 <Button
                   onClick={handleSendDigest}
-                  disabled={sendingDigest}
+                  disabled={sendingDigest || selectedDigestPosts.length === 0}
                   className="bg-green-600 hover:bg-green-700 text-white rounded-full"
                   data-testid="send-digest-btn"
                 >
                   {sendingDigest ? (
                     <><RefreshCw className="w-4 h-4 mr-1.5 animate-spin" /> Sending...</>
                   ) : (
-                    <><Send className="w-4 h-4 mr-1.5" /> Send Digest Now</>
+                    <><Send className="w-4 h-4 mr-1.5" /> Send Selected Digest</>
                   )}
                 </Button>
               </div>
+            </div>
+
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
+              <h3 className="font-heading font-bold text-base text-[#1A1A1A] mb-2">Digest Composer</h3>
+              <p className="text-xs text-gray-400 mb-4">Pick the posts you want readers to see. The order follows newest-to-oldest from the list below.</p>
+              <Textarea
+                value={digestIntro}
+                onChange={(e) => setDigestIntro(e.target.value)}
+                placeholder="Optional intro note from admin..."
+                className="rounded-none min-h-[110px] mb-4"
+                data-testid="digest-intro"
+              />
+              <div className="border border-[#F4F4F5]">
+                {allPosts.filter(p => !p.title?.startsWith('TEST')).slice(0, 20).map(post => (
+                  <label key={post.id} className="flex items-start gap-3 px-4 py-3 border-b border-[#F4F4F5] last:border-0 hover:bg-[#FDFCF8] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedDigestPosts.includes(post.id)}
+                      onChange={() => toggleDigestPost(post.id)}
+                      disabled={!selectedDigestPosts.includes(post.id) && selectedDigestPosts.length >= 5}
+                      className="mt-1"
+                      data-testid={`digest-post-${post.id}`}
+                    />
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-sm font-medium text-[#1A1A1A] line-clamp-1">{post.title}</span>
+                      <span className="block text-xs text-gray-400">
+                        {post.author_name} — {post.author_city} · {post.likes || 0} likes · {post.views || 0} views
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-3">{selectedDigestPosts.length}/5 posts selected.</p>
             </div>
 
             {/* Recent Digest Logs */}
@@ -907,7 +1018,14 @@ export default function AdminPage() {
             <h2 className="font-heading font-bold text-lg text-[#1A1A1A] mb-4">Registered Users ({users.length})</h2>
             <div className="bg-white rounded-none border border-[#E5E5E5] p-4">
               {users.map(u => (
-                <UserRow key={u.id} u={u} currentUserId={user.id} onToggleAdmin={handleToggleAdmin} />
+                <UserRow
+                  key={u.id}
+                  u={u}
+                  currentUserId={user.id}
+                  onToggleAdmin={handleToggleAdmin}
+                  onSetApproval={handleSetUserApproval}
+                  onSetSuspension={handleSetUserSuspension}
+                />
               ))}
             </div>
           </div>

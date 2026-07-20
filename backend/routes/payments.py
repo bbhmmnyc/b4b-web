@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import stripe
 from database import db
 from auth import require_admin
+from models import DonationCheckoutRequest
 
 router = APIRouter()
 
@@ -194,6 +195,83 @@ async def create_ad_checkout(req: AdBookingRequest, http_request: Request):
     }
 
 
+@router.get("/payments/donations/status")
+async def get_donation_status():
+    return {
+        "enabled": bool(os.environ.get("STRIPE_API_KEY")),
+        "presets": [1, 5, 10, 15, 20],
+        "currency": "usd",
+    }
+
+
+@router.post("/payments/donations/checkout")
+async def create_donation_checkout(req: DonationCheckoutRequest):
+    api_key = os.environ.get("STRIPE_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="Donations are not available until payment keys are configured")
+
+    parsed_origin = urlparse(req.origin_url)
+    if parsed_origin.scheme not in {"http", "https"} or not parsed_origin.netloc:
+        raise HTTPException(status_code=400, detail="Invalid origin_url")
+
+    origin = f"{parsed_origin.scheme}://{parsed_origin.netloc}".rstrip("/")
+    allowed_origins = [
+        o.strip().rstrip("/")
+        for o in os.environ.get("PAYMENT_ALLOWED_ORIGINS", os.environ.get("SITE_URL", "")).split(",")
+        if o.strip()
+    ]
+    if allowed_origins and origin not in allowed_origins:
+        raise HTTPException(status_code=400, detail="origin_url is not allowed")
+
+    amount = round(req.amount, 2)
+    donation_id = str(uuid.uuid4())[:8].upper()
+    stripe.api_key = api_key
+
+    session_kwargs = {
+        "mode": "payment",
+        "line_items": [
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {"name": f"Blogs 4 Blocks community donation {donation_id}"},
+                    "unit_amount": int(amount * 100),
+                },
+                "quantity": 1,
+            }
+        ],
+        "currency": "usd",
+        "success_url": f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}&type=donation",
+        "cancel_url": origin,
+        "metadata": {
+            "type": "donation",
+            "donation_id": donation_id,
+            "donor_name": req.donor_name or "",
+            "email": str(req.email) if req.email else "",
+        },
+    }
+    if req.email:
+        session_kwargs["customer_email"] = str(req.email)
+
+    session = stripe.checkout.Session.create(**session_kwargs)
+
+    tx = {
+        "id": str(uuid.uuid4()),
+        "donation_id": donation_id,
+        "session_id": session.id,
+        "type": "donation",
+        "donor_name": req.donor_name or "",
+        "email": str(req.email) if req.email else "",
+        "total_price": amount,
+        "currency": "usd",
+        "payment_status": "pending",
+        "status": "initiated",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.payment_transactions.insert_one(tx)
+
+    return {"url": session.url, "session_id": session.id, "donation_id": donation_id, "total": amount}
+
+
 async def finalize_paid_transaction(session_id: str):
     tx = await db.payment_transactions.find_one(
         {"session_id": session_id},
@@ -204,6 +282,13 @@ async def finalize_paid_transaction(session_id: str):
         return None
 
     now_iso = datetime.now(timezone.utc).isoformat()
+
+    if tx.get("type") == "donation":
+        await db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {"payment_status": "paid", "status": "completed", "updated_at": now_iso}},
+        )
+        return tx
 
     await db.payment_transactions.update_one(
         {"session_id": session_id},

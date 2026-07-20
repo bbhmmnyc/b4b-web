@@ -11,6 +11,7 @@ export default function PaymentSuccessPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  const paymentType = searchParams.get('type');
   const [status, setStatus] = useState('loading');
   const [paymentData, setPaymentData] = useState(null);
   const polled = useRef(false);
@@ -55,8 +56,8 @@ export default function PaymentSuccessPage() {
           <XCircle className="w-12 h-12 text-[#C2544D] mx-auto mb-4" />
           <h1 className="font-heading font-bold text-xl text-[#1A1A1A] mb-2">Invalid Session</h1>
           <p className="text-sm text-brand-grey mb-6">No payment session found.</p>
-          <Button onClick={() => navigate('/advertise')} className="bg-[#1A1A1A] text-white rounded-none font-bold text-xs uppercase tracking-widest px-6 py-2.5 h-auto">
-            Back to Advertise
+          <Button onClick={() => navigate(paymentType === 'donation' ? '/donate' : '/advertise')} className="bg-[#1A1A1A] text-white rounded-none font-bold text-xs uppercase tracking-widest px-6 py-2.5 h-auto">
+            {paymentType === 'donation' ? 'Back to Donate' : 'Back to Advertise'}
           </Button>
         </div>
       </div>
@@ -78,16 +79,25 @@ export default function PaymentSuccessPage() {
           <div className="border border-[#2D8B7A]/30 p-10" style={{ background: 'linear-gradient(135deg, #E0F5EC 0%, #FDFCF8 100%)' }} data-testid="payment-success">
             <Check className="w-14 h-14 text-[#2D8B7A] mx-auto mb-4" />
             <h1 className="font-heading font-bold text-2xl text-[#1A1A1A] mb-2">Payment Successful!</h1>
-            <p className="text-sm text-brand-grey mb-2">Thank you for your ad booking.</p>
+            <p className="text-sm text-brand-grey mb-2">
+              {paymentData?.metadata?.type === 'donation' ? 'Thank you for supporting Blogs 4 Blocks.' : 'Thank you for your ad booking.'}
+            </p>
             {paymentData?.metadata?.booking_id && (
               <p className="text-xs text-brand-grey mb-6">Booking ID: <span className="font-bold text-[#1A1A1A]">{paymentData.metadata.booking_id}</span></p>
+            )}
+            {paymentData?.metadata?.donation_id && (
+              <p className="text-xs text-brand-grey mb-6">Donation ID: <span className="font-bold text-[#1A1A1A]">{paymentData.metadata.donation_id}</span></p>
             )}
             {paymentData?.amount_total && (
               <p className="text-lg font-heading font-black text-[#2D8B7A] mb-6">
                 ${(paymentData.amount_total / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
             )}
-            <p className="text-xs text-brand-grey mb-6">Our team will reach out within 48 hours to set up your campaign. A confirmation has been sent to your email.</p>
+            <p className="text-xs text-brand-grey mb-6">
+              {paymentData?.metadata?.type === 'donation'
+                ? 'Your contribution helps keep the forum moving. A payment confirmation has been sent if an email was provided.'
+                : 'Our team will reach out within 48 hours to set up your campaign. A confirmation has been sent to your email.'}
+            </p>
             <Button onClick={() => navigate('/')} className="bg-[#2D8B7A] text-white hover:bg-[#247062] rounded-none font-bold text-xs uppercase tracking-widest px-6 py-2.5 h-auto">
               Back to Home <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -105,7 +115,7 @@ export default function PaymentSuccessPage() {
                 ? 'This payment session has expired. Please try again.'
                 : 'We couldn\'t verify your payment status. If you were charged, please contact us and we\'ll sort it out.'}
             </p>
-            <Button onClick={() => navigate('/advertise')} className="bg-[#C2544D] text-white hover:bg-[#A0443E] rounded-none font-bold text-xs uppercase tracking-widest px-6 py-2.5 h-auto">
+            <Button onClick={() => navigate(paymentType === 'donation' ? '/donate' : '/advertise')} className="bg-[#C2544D] text-white hover:bg-[#A0443E] rounded-none font-bold text-xs uppercase tracking-widest px-6 py-2.5 h-auto">
               Try Again
             </Button>
           </div>

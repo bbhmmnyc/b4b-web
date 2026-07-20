@@ -67,6 +67,8 @@ async def require_user(authorization: Optional[str] = Header(None)):
     user = await get_current_user(authorization)
     if not user:
         raise HTTPException(status_code=401, detail="Authentication required")
+    if user.get("is_suspended"):
+        raise HTTPException(status_code=403, detail="This account has been suspended.")
     return user
 
 

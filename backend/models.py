@@ -73,6 +73,16 @@ class NewsletterSubscribe(BaseModel):
     email: str
     name: Optional[str] = None
 
+class DonationCheckoutRequest(BaseModel):
+    amount: float = Field(..., ge=1, le=5000)
+    donor_name: Optional[str] = Field(default=None, max_length=120)
+    email: Optional[EmailStr] = None
+    origin_url: str
+
+class DigestSendRequest(BaseModel):
+    post_ids: List[str] = Field(default_factory=list, max_length=10)
+    intro_note: Optional[str] = Field(default=None, max_length=2000)
+
 class PartnerRequest(BaseModel):
     target_id: str
 

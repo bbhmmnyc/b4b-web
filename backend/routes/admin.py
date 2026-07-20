@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from database import db
 from auth import require_user, require_admin
-from models import AdminSetupRequest
+from models import AdminSetupRequest, DigestSendRequest
 
 router = APIRouter()
 
@@ -26,6 +26,8 @@ async def self_promote_to_admin(req: AdminSetupRequest, user=Depends(require_use
         {"id": user["id"]},
         {"$set": {
             "is_admin": True,
+            "is_approved": True,
+            "email_verified": True,
             "admin_created_at": datetime.now(timezone.utc).isoformat(),
         }},
     )
@@ -41,6 +43,9 @@ async def admin_stats(user=Depends(require_admin)):
     total_posts = await db.posts.count_documents({})
     total_comments = await db.comments.count_documents({})
     total_users = await db.users.count_documents({})
+    approved_users = await db.users.count_documents({"is_approved": True})
+    pending_users = await db.users.count_documents({"is_approved": {"$ne": True}})
+    suspended_users = await db.users.count_documents({"is_suspended": True})
     total_categories = await db.categories.count_documents({"status": "approved"})
     pending_categories = await db.categories.count_documents({"status": "pending"})
     countries = await db.users.distinct("country", {"country": {"$nin": [None, "", "Unknown"]}})
@@ -55,6 +60,9 @@ async def admin_stats(user=Depends(require_admin)):
         "total_posts": total_posts,
         "total_comments": total_comments,
         "total_users": total_users,
+        "approved_users": approved_users,
+        "pending_users": pending_users,
+        "suspended_users": suspended_users,
         "total_categories": total_categories,
         "approved_categories": total_categories,
         "countries_represented": countries_represented,
@@ -98,9 +106,12 @@ async def admin_list_users(user=Depends(require_admin)):
 
 
 @router.post("/admin/send-digest")
-async def send_weekly_digest_endpoint(user=Depends(require_admin)):
+async def send_weekly_digest_endpoint(req: DigestSendRequest = None, user=Depends(require_admin)):
     from routes.newsletter import _send_weekly_digest
-    result = await _send_weekly_digest()
+    result = await _send_weekly_digest(
+        selected_post_ids=req.post_ids if req else None,
+        intro_note=req.intro_note if req else None,
+    )
     return result
 
 
@@ -285,6 +296,36 @@ async def toggle_user_admin(user_id: str, admin=Depends(require_admin)):
         "message": f"User {'promoted to' if new_status else 'removed from'} admin",
         "is_admin": new_status
     }
+
+
+@router.put("/admin/users/{user_id}/approval")
+async def set_user_approval(user_id: str, body: dict, admin=Depends(require_admin)):
+    target = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    approved = bool(body.get("is_approved", True))
+    if approved and not target.get("email_verified") and not target.get("is_admin"):
+        raise HTTPException(status_code=400, detail="This user must verify their email before posting approval.")
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_approved": approved, "approval_updated_at": datetime.now(timezone.utc).isoformat(), "approval_updated_by": admin["id"]}},
+    )
+    return {"message": "User approved for posting" if approved else "User posting approval removed", "is_approved": approved}
+
+
+@router.put("/admin/users/{user_id}/suspension")
+async def set_user_suspension(user_id: str, body: dict, admin=Depends(require_admin)):
+    target = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target["id"] == admin["id"]:
+        raise HTTPException(status_code=400, detail="You cannot suspend your own account")
+    suspended = bool(body.get("is_suspended", True))
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_suspended": suspended, "suspension_updated_at": datetime.now(timezone.utc).isoformat(), "suspension_updated_by": admin["id"]}},
+    )
+    return {"message": "User suspended" if suspended else "User suspension removed", "is_suspended": suspended}
 
 
 @router.put("/admin/posts/{post_id}/sponsor")

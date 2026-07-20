@@ -74,6 +74,8 @@ async def get_subcategories():
 async def suggest_category(suggestion: CategorySuggest, user=Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Must be logged in to suggest categories")
+    if user.get("is_suspended"):
+        raise HTTPException(status_code=403, detail="This account has been suspended.")
     slug = re.sub(r'[^a-z0-9]+', '-', suggestion.name.lower()).strip('-')
     existing = await db.categories.find_one({"slug": slug})
     if existing:

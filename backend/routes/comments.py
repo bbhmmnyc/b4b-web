@@ -77,6 +77,8 @@ async def create_comment(post_id: str, comment: CommentCreate, user=Depends(get_
     post = await db.posts.find_one({"id": post_id}, {"_id": 0})
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    if user and user.get("is_suspended"):
+        raise HTTPException(status_code=403, detail="This account has been suspended.")
 
     # Extract @mentions from content
     mentions = re.findall(r'@(\w[\w\s]*?)(?=\s@|\s|$|[.,!?])', comment.content)

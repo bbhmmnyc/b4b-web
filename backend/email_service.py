@@ -1,18 +1,47 @@
 import os
 import logging
 import resend
+import urllib.request
+import urllib.error
+import json
 from database import db
 
 logger = logging.getLogger("server")
 
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
 
 
 async def send_email_notification(to_email: str, subject: str, html_content: str):
-    """Send an email notification using Resend"""
+    """Send an email notification using Brevo when configured, otherwise Resend."""
+    if BREVO_API_KEY:
+        payload = {
+            "sender": {"name": "Blogs 4 Blocks", "email": SENDER_EMAIL},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_content,
+        }
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "accept": "application/json",
+                "api-key": BREVO_API_KEY,
+                "content-type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as response:
+                response.read()
+            logger.info(f"Brevo email sent to {to_email}: {subject}")
+        except Exception as e:
+            logger.error(f"Failed to send Brevo email to {to_email}: {e}")
+        return
+
     if not RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY not set, skipping email")
+        logger.warning("BREVO_API_KEY/RESEND_API_KEY not set, skipping email")
         return
     try:
         resend.api_key = RESEND_API_KEY

@@ -17,6 +17,16 @@ body {
   color: #07111F;
 }
 
+:root {
+  --system-label-font: "Century Gothic", "Montserrat", "Avenir Next", Arial, sans-serif;
+}
+
+nav,
+.hero-label,
+.system-label {
+  font-family: var(--system-label-font);
+}
+
 .text-slate-400,
 .text-slate-500,
 .text-slate-600,

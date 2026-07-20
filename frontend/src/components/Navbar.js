@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Menu, X, PenLine, LogIn, LogOut, User, ChevronDown, Shield } from 'lucide-react';
+import { Menu, X, PenLine, LogIn, LogOut, User, ChevronDown, Shield, HeartHandshake } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { getCategoryColor } from '../utils/colors';
 import {
@@ -74,12 +74,20 @@ export default function Navbar() {
                   boxShadow: '0 8px 32px rgba(20,40,80,0.12)',
                 }}
               >
+                <DropdownMenuItem
+                  onClick={() => navigate('/topics')}
+                  data-testid="nav-all-topics"
+                  className="rounded-md mx-1 my-0.5 cursor-pointer font-semibold text-slate-800"
+                >
+                  View All Topics
+                </DropdownMenuItem>
+                <DropdownMenuSeparator style={{ backgroundColor: 'rgba(30,50,80,0.10)' }} />
                 {categories.map(cat => {
                   const cc = getCategoryColor(cat.slug);
                   return (
                     <DropdownMenuItem
                       key={cat.slug}
-                      onClick={() => navigate(`/category/${cat.slug}`)}
+                      onClick={() => navigate(cat.slug === 'careers' ? '/careers' : `/category/${cat.slug}`)}
                       data-testid={`nav-cat-${cat.slug}`}
                       className="rounded-md mx-1 my-0.5 cursor-pointer"
                       style={{ borderLeft: `2px solid ${cc.base}` }}
@@ -113,6 +121,23 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/donate')}
+              className="rounded-none h-9 px-4 uppercase tracking-widest text-[11px] font-bold"
+              style={{
+                background: 'rgba(255,255,255,0.58)',
+                border: '1px solid rgba(160,30,44,0.24)',
+                color: '#A01E2C',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.88)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.58)'; }}
+              data-testid="nav-donate-btn"
+            >
+              <HeartHandshake className="w-3.5 h-3.5 mr-2" />
+              Donate
+            </Button>
+
             <Button
               onClick={() => navigate('/write')}
               className="rounded-none h-9 px-4 uppercase tracking-widest text-[11px] font-bold text-white"
@@ -221,18 +246,10 @@ export default function Navbar() {
           >
             <div className="flex flex-col gap-1">
               <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">Home</Link>
-              <div className="px-3 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] font-mono">Topics</div>
-              {categories.map(cat => {
-                const mc = getCategoryColor(cat.slug);
-                return (
-                  <Link key={cat.slug} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)} className="flex items-center px-3 py-2 text-sm text-slate-600 hover:text-slate-900 no-underline transition-colors">
-                    <span className="w-1.5 h-1.5 rounded-full mr-2.5 flex-shrink-0" style={{ backgroundColor: mc.base }} />
-                    {cat.name}
-                  </Link>
-                );
-              })}
+              <Link to="/topics" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">Topics</Link>
               <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">About</Link>
               <Link to="/advertise" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-700 hover:text-amber-800 no-underline transition-colors">Advertise</Link>
+              <Link to="/donate" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-red-700 hover:text-red-800 no-underline transition-colors">Donate</Link>
               {user && <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">My Dashboard</Link>}
               {user?.is_admin && (
                 <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 no-underline transition-colors">

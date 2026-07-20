@@ -71,7 +71,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen" data-testid="home-page">
 
-      <section className="relative overflow-hidden" style={{ borderBottom: '1px solid rgba(30,50,80,0.10)' }} data-testid="hero-section">
+      <section className="relative overflow-hidden hero-label" style={{ borderBottom: '1px solid rgba(30,50,80,0.10)' }} data-testid="hero-section">
         <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-20">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -296,9 +296,9 @@ export default function HomePage() {
                 <h3 className="font-heading font-bold text-2xl mb-6" style={{ color: '#1A2A3C' }}>How to Share a Post</h3>
                 <div className="space-y-5">
                   {[
-                    { step: '01', icon: <UserPlus className="w-4 h-4" />, title: 'Create an account (or post as guest)', desc: 'Sign up for a free account or skip and post as a guest — Reminder account posts stick around longer than guests-your choice..' },
-                    { step: '02', icon: <Edit3 className="w-4 h-4" />, title: 'Click "Write" and pick a topic', desc: 'Choose a marketing category that fits, add a title, and use our editor to write your post.' },
-                    { step: '03', icon: <Send className="w-4 h-4" />, title: 'Hit "Publish" and join the conversation', desc: "Your post goes live immediately. Readers can like, comment, and share." },
+                    { step: '01', icon: <UserPlus className="w-4 h-4" />, title: 'Create an account', desc: 'Sign up with your real first and last name. You can choose a published name or alias for posts.' },
+                    { step: '02', icon: <Edit3 className="w-4 h-4" />, title: 'Get approved to publish', desc: 'Registered users can comment. Blog posting opens after admin approval so the forum stays useful and accountable.' },
+                    { step: '03', icon: <Send className="w-4 h-4" />, title: 'Share local insight', desc: "Write strategy, experience, data, and insight tied to your city, region, state, or country." },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-4">
                       <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-sm font-bold" style={{ background: 'rgba(10,120,106,0.10)', border: '1px solid rgba(10,120,106,0.22)', color: '#0A7A6A', ...MONO }}>{item.step}</div>
