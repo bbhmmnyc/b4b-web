@@ -26,6 +26,7 @@ from routes.tracking import router as tracking_router
 from routes.misc import router as misc_router
 from routes.advertise import router as advertise_router
 from routes.payments import router as payments_router
+from routes.translation import router as translation_router
 
 ROOT_DIR = Path(__file__).parent
 logging.basicConfig(level=logging.INFO)
@@ -68,6 +69,7 @@ api_router.include_router(tracking_router)
 api_router.include_router(misc_router)
 api_router.include_router(advertise_router)
 api_router.include_router(payments_router)
+api_router.include_router(translation_router)
 
 app.include_router(api_router, prefix="/api")
 
@@ -112,6 +114,8 @@ async def startup():
     await db.partnerships.create_index("status")
     await db.email_events.create_index("digest_id")
     await db.email_events.create_index("event_type")
+    await db.translation_cache.create_index("key", unique=True)
+    await db.translation_cache.create_index([("target_language", 1), ("created_at", -1)])
 
     # Seed categories
     for cat in SEED_CATEGORIES:

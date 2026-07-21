@@ -134,6 +134,7 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
         "subcategory": post.subcategory,
         "tags": post.tags,
         "cover_image": post.cover_image,
+        "language": post.language or "en",
         "co_authors": [],
         "is_guest": is_guest,
         "likes": 0,

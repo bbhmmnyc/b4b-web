@@ -41,6 +41,7 @@ class PostCreate(BaseModel):
     subcategory: Optional[str] = Field(default=None, max_length=80)
     tags: List[str] = Field(default_factory=list, max_length=10)
     cover_image: Optional[str] = Field(default=None, max_length=500)
+    language: Optional[str] = Field(default="en", max_length=12)
     guest_author: Optional[GuestAuthor] = None
     co_authors: List[str] = Field(default_factory=list, max_length=10)
 
@@ -67,7 +68,15 @@ class PostUpdate(BaseModel):
     subcategory: Optional[str] = None
     tags: Optional[List[str]] = None
     cover_image: Optional[str] = None
+    language: Optional[str] = None
     co_authors: Optional[List[str]] = None
+
+class TranslationRequest(BaseModel):
+    title: Optional[str] = Field(default=None, max_length=1000)
+    excerpt: Optional[str] = Field(default=None, max_length=2000)
+    content: str = Field(..., min_length=1, max_length=60000)
+    target_language: str = Field(..., min_length=2, max_length=12)
+    source_language: Optional[str] = Field(default="auto", max_length=12)
 
 class NewsletterSubscribe(BaseModel):
     email: str

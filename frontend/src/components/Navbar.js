@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { Menu, X, PenLine, LogIn, LogOut, User, ChevronDown, Shield, HeartHandshake } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { getCategoryColor } from '../utils/colors';
+import LanguageSelector from './LanguageSelector';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +14,7 @@ import {
 } from '../components/ui/dropdown-menu';
 
 export default function Navbar() {
-  const { user, logout, categories } = useApp();
+  const { user, logout, categories, t } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -51,7 +52,7 @@ export default function Navbar() {
                 }`}
               data-testid="nav-home"
             >
-              Home
+              {t('home')}
             </Link>
 
             <DropdownMenu>
@@ -61,7 +62,7 @@ export default function Navbar() {
                     }`}
                   data-testid="nav-categories-dropdown"
                 >
-                  Topics <ChevronDown className="w-3 h-3" />
+                  {t('topics')} <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -79,7 +80,7 @@ export default function Navbar() {
                   data-testid="nav-all-topics"
                   className="rounded-md mx-1 my-0.5 cursor-pointer font-semibold text-slate-800"
                 >
-                  View All Topics
+                  {t('viewAllTopics')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator style={{ backgroundColor: 'rgba(30,50,80,0.10)' }} />
                 {categories.map(cat => {
@@ -107,7 +108,7 @@ export default function Navbar() {
                 }`}
               data-testid="nav-about"
             >
-              About
+              {t('about')}
             </Link>
 
             <Link
@@ -116,11 +117,13 @@ export default function Navbar() {
                 }`}
               data-testid="nav-advertise"
             >
-              Advertise
+              {t('advertise')}
             </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-2">
+            <LanguageSelector compact />
+
             <Button
               variant="outline"
               onClick={() => navigate('/donate')}
@@ -135,7 +138,7 @@ export default function Navbar() {
               data-testid="nav-donate-btn"
             >
               <HeartHandshake className="w-3.5 h-3.5 mr-2" />
-              Donate
+              {t('donate')}
             </Button>
 
             <Button
@@ -151,7 +154,7 @@ export default function Navbar() {
               data-testid="nav-write-btn"
             >
               <PenLine className="w-3.5 h-3.5 mr-2" />
-              Write
+              {t('write')}
             </Button>
 
             {user ? (
@@ -192,11 +195,11 @@ export default function Navbar() {
                   </div>
                   <DropdownMenuSeparator style={{ backgroundColor: 'rgba(30,50,80,0.10)' }} />
                   <DropdownMenuItem onClick={() => navigate('/profile')} className="text-slate-700 cursor-pointer" data-testid="nav-profile-btn">
-                    <User className="w-4 h-4 mr-2" /> My Dashboard
+                    <User className="w-4 h-4 mr-2" /> {t('myDashboard')}
                   </DropdownMenuItem>
                   {user.is_admin && (
                     <DropdownMenuItem onClick={() => navigate('/admin')} className="text-slate-700 cursor-pointer" data-testid="nav-admin-btn">
-                      <Shield className="w-4 h-4 mr-2" /> Admin Panel
+                      <Shield className="w-4 h-4 mr-2" /> {t('adminPanel')}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator style={{ backgroundColor: 'rgba(30,50,80,0.10)' }} />
@@ -205,7 +208,7 @@ export default function Navbar() {
                     className="text-slate-700 cursor-pointer"
                     data-testid="nav-logout-btn"
                   >
-                    <LogOut className="w-4 h-4 mr-2" /> Sign Out
+                    <LogOut className="w-4 h-4 mr-2" /> {t('signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -224,7 +227,7 @@ export default function Navbar() {
                 data-testid="nav-login-btn"
               >
                 <LogIn className="w-3.5 h-3.5 mr-2" />
-                Sign In
+                {t('signIn')}
               </Button>
             )}
           </div>
@@ -245,15 +248,16 @@ export default function Navbar() {
             data-testid="nav-mobile-menu"
           >
             <div className="flex flex-col gap-1">
-              <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">Home</Link>
-              <Link to="/topics" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">Topics</Link>
-              <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">About</Link>
-              <Link to="/advertise" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-700 hover:text-amber-800 no-underline transition-colors">Advertise</Link>
-              <Link to="/donate" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-red-700 hover:text-red-800 no-underline transition-colors">Donate</Link>
-              {user && <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">My Dashboard</Link>}
+              <div className="px-1"><LanguageSelector /></div>
+              <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('home')}</Link>
+              <Link to="/topics" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('topics')}</Link>
+              <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('about')}</Link>
+              <Link to="/advertise" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-700 hover:text-amber-800 no-underline transition-colors">{t('advertise')}</Link>
+              <Link to="/donate" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-red-700 hover:text-red-800 no-underline transition-colors">{t('donate')}</Link>
+              {user && <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('myDashboard')}</Link>}
               {user?.is_admin && (
                 <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 no-underline transition-colors">
-                  <Shield className="w-4 h-4" /> Admin Panel
+                  <Shield className="w-4 h-4" /> {t('adminPanel')}
                 </Link>
               )}
               <div className="mt-4 pt-4 flex flex-col gap-2" style={{ borderTop: '1px solid rgba(30,50,80,0.10)' }}>
@@ -262,7 +266,7 @@ export default function Navbar() {
                   className="rounded-none font-bold uppercase tracking-widest text-xs text-white"
                   style={{ background: 'linear-gradient(155deg, #C42838 0%, #A01E2C 50%, #7E1420 100%)', boxShadow: '0 2px 10px rgba(160,30,44,0.32)' }}
                 >
-                  <PenLine className="w-3.5 h-3.5 mr-2" /> Write a Post
+                  <PenLine className="w-3.5 h-3.5 mr-2" /> {t('writePost')}
                 </Button>
                 {!user && (
                   <Button
@@ -271,7 +275,7 @@ export default function Navbar() {
                     className="rounded-none uppercase tracking-widest text-xs font-bold"
                     style={{ background: 'rgba(255,255,255,0.60)', border: '1px solid rgba(30,50,80,0.22)', color: '#1E3050' }}
                   >
-                    <LogIn className="w-3.5 h-3.5 mr-2" /> Sign In
+                    <LogIn className="w-3.5 h-3.5 mr-2" /> {t('signIn')}
                   </Button>
                 )}
                 {user && (
@@ -281,7 +285,7 @@ export default function Navbar() {
                     className="rounded-none uppercase tracking-widest text-xs font-bold"
                     style={{ background: 'transparent', border: '1px solid rgba(30,50,80,0.14)', color: '#4A5A70' }}
                   >
-                    <LogOut className="w-3.5 h-3.5 mr-2" /> Sign Out
+                    <LogOut className="w-3.5 h-3.5 mr-2" /> {t('signOut')}
                   </Button>
                 )}
               </div>

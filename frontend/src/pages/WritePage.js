@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '../components/ui/select';
+import { LANGUAGES } from '../i18n';
 import { toast } from 'sonner';
 
 export default function WritePage() {
@@ -32,6 +33,7 @@ export default function WritePage() {
     category_slug: '',
     subcategory: '',
     tags: '',
+    language: 'en',
   });
   const [guestData, setGuestData] = useState({
     name: '',
@@ -71,6 +73,7 @@ export default function WritePage() {
           category_slug: p.category_slug || '',
           subcategory: p.subcategory || '',
           tags: (p.tags || []).join(', '),
+          language: p.language || 'en',
         });
         if (p.cover_image) setCoverImage(p.cover_image);
         if (p.co_authors?.length) setSelectedCoAuthors(p.co_authors.map(ca => ca.id));
@@ -302,6 +305,23 @@ export default function WritePage() {
                   </Select>
                 </div>
               )}
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold uppercase tracking-wider text-brand-grey">Original Language</Label>
+              <Select value={formData.language} onValueChange={(v) => setFormData(prev => ({ ...prev, language: v }))}>
+                <SelectTrigger className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-language-select">
+                  <SelectValue placeholder="Choose original language" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map(lang => (
+                    <SelectItem key={lang.code} value={lang.code} data-testid={`write-language-${lang.code}`}>
+                      {lang.nativeName} ({lang.name})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-brand-grey mt-1">This helps readers translate your post more accurately while keeping your original version as the source.</p>
             </div>
 
             <button type="button" onClick={() => setShowSuggestDialog(true)} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-grey hover:text-[#1A1A1A] transition-colors" data-testid="suggest-topic-btn">

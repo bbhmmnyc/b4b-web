@@ -5,7 +5,7 @@ import axios from 'axios';
 import DOMPurify from 'dompurify';
 import { useApp } from '../context/AppContext';
 import CommentSection from '../components/CommentSection';
-import { ArrowLeft, Heart, Eye, MapPin, Clock, Tag, Timer, Pencil, Trash2, Facebook, Twitter, Linkedin, Link2 } from 'lucide-react';
+import { ArrowLeft, Heart, Eye, MapPin, Clock, Tag, Timer, Pencil, Trash2, Facebook, Twitter, Linkedin, Link2, Languages } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import BlogCard from '../components/BlogCard';
@@ -13,13 +13,16 @@ import { toast } from 'sonner';
 
 export default function PostPage() {
   const { id } = useParams();
-  const { API, token, user } = useApp();
+  const { API, token, user, language, t } = useApp();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [related, setRelated] = useState([]);
   const [deleting, setDeleting] = useState(false);
+  const [translatedPost, setTranslatedPost] = useState(null);
+  const [translating, setTranslating] = useState(false);
+  const [translationError, setTranslationError] = useState('');
 
   const fetchPost = useCallback(async () => {
     try {
@@ -40,6 +43,11 @@ export default function PostPage() {
   useEffect(() => {
     fetchPost();
   }, [fetchPost]);
+
+  useEffect(() => {
+    setTranslatedPost(null);
+    setTranslationError('');
+  }, [language, id]);
 
   const handleLike = async () => {
     try {
@@ -79,6 +87,38 @@ export default function PostPage() {
     urls[platform]?.();
   };
 
+  const handleTranslate = async () => {
+    if (translatedPost) {
+      setTranslatedPost(null);
+      setTranslationError('');
+      return;
+    }
+    if (!post || language === (post.language || 'en')) return;
+    setTranslating(true);
+    setTranslationError('');
+    try {
+      const res = await axios.post(`${API}/translate/post`, {
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        source_language: post.language || 'auto',
+        target_language: language,
+      });
+      setTranslatedPost({
+        ...post,
+        title: res.data.title || post.title,
+        excerpt: res.data.excerpt || post.excerpt,
+        content: res.data.content || post.content,
+        machine_translated: res.data.machine_translated,
+      });
+    } catch (e) {
+      const msg = e.response?.data?.detail || t('translationUnavailable');
+      setTranslationError(msg);
+      toast.error(msg);
+    }
+    setTranslating(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -100,6 +140,8 @@ export default function PostPage() {
   const isCoAuthor = user && post.co_authors?.some(ca => ca.id === user.id);
   const isAdmin = user?.is_admin;
   const canEdit = isAuthor || isCoAuthor || isAdmin;
+  const displayPost = translatedPost || post;
+  const isTranslated = Boolean(translatedPost);
 
   const renderContent = (content) => {
     return content.split('\n').map((line, i) => {
@@ -209,7 +251,7 @@ export default function PostPage() {
           )}
           {post.is_sponsored && (
             <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full bg-[#C4942A]/15 text-[#C4942A]" data-testid="post-sponsored-badge">
-              Sponsored
+              {t('sponsored')}
             </span>
           )}
         </div>
@@ -217,7 +259,7 @@ export default function PostPage() {
         {/* Sponsor branding bar */}
         {post.is_sponsored && post.sponsor_name && (
           <div className="flex items-center gap-3 mb-6 p-4 border border-[#C4942A]/20" style={{ background: 'linear-gradient(135deg, #FFF8E1 0%, #FDFCF8 100%)' }} data-testid="post-sponsor-bar">
-            <span className="text-xs text-brand-grey font-medium">Presented by</span>
+            <span className="text-xs text-brand-grey font-medium">{t('presentedBy')}</span>
             {post.sponsor_url ? (
               <a href={post.sponsor_url} target="_blank" rel="noopener noreferrer" className="font-bold text-sm text-[#C4942A] hover:underline no-underline">
                 {post.sponsor_name}
@@ -230,15 +272,41 @@ export default function PostPage() {
 
         {/* Title */}
         <h1 className="font-heading font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight text-[#1A1A1A] mb-8 leading-tight" data-testid="post-title">
-          {post.title}
+          {displayPost.title}
         </h1>
+
+        {language !== (post.language || 'en') && (
+          <div className="mb-8">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleTranslate}
+              disabled={translating}
+              className="rounded-none border-[#E5E5E5] gap-2 text-xs font-bold uppercase tracking-widest"
+              data-testid="post-translate-btn"
+            >
+              <Languages className="w-3.5 h-3.5" />
+              {translating ? t('translating') : isTranslated ? t('showOriginal') : t('translatePost')}
+            </Button>
+            {isTranslated && (
+              <p className="mt-3 text-xs leading-relaxed text-amber-800 bg-amber-50 border border-amber-200 p-3" data-testid="translation-notice">
+                {t('machineTranslationNotice')}
+              </p>
+            )}
+            {translationError && (
+              <p className="mt-3 text-xs leading-relaxed text-red-700 bg-red-50 border border-red-200 p-3" data-testid="translation-error">
+                {translationError}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Cover Image */}
         {post.cover_image && (
           <div className="overflow-hidden mb-10 border border-[#E5E5E5]" data-testid="post-cover-image">
             <img
               src={getAssetUrl(post.cover_image)}
-              alt={post.title}
+              alt={displayPost.title}
               className="w-full h-auto max-h-[400px] object-cover"
             />
           </div>
@@ -271,10 +339,10 @@ export default function PostPage() {
 
         {/* Content */}
         <div className="blog-content text-base md:text-lg" data-testid="post-content">
-          {isHtmlContent(post.content) ? (
-            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }} />
+          {isHtmlContent(displayPost.content) ? (
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayPost.content) }} />
           ) : (
-            renderContent(post.content)
+            renderContent(displayPost.content)
           )}
         </div>
 
@@ -292,7 +360,7 @@ export default function PostPage() {
 
         {/* Social Sharing */}
         <div className="mt-8 pt-8 border-t border-[#E5E5E5]" data-testid="post-social-share">
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-grey mb-4">Share this post</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-grey mb-4">{t('shareThisPost')}</p>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => handleShare('twitter')} className="rounded-none border-[#E5E5E5] gap-2 hover:border-[#1A1A1A] text-xs" data-testid="share-twitter">
               <Twitter className="w-3.5 h-3.5" /> Twitter
@@ -337,8 +405,8 @@ export default function PostPage() {
         {/* Related Posts */}
         {related.length > 0 && (
           <div className="mt-16 pt-10 border-t border-[#E5E5E5]" data-testid="related-posts-section">
-            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-grey mb-3">Related</p>
-            <h2 className="font-heading font-bold text-2xl text-[#1A1A1A] mb-8">You Might Also Like</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-grey mb-3">{t('related')}</p>
+            <h2 className="font-heading font-bold text-2xl text-[#1A1A1A] mb-8">{t('youMightAlsoLike')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {related.map((r, i) => (
                 <BlogCard key={r.id} post={r} index={i} />

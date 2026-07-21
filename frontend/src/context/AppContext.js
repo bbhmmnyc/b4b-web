@@ -1,6 +1,7 @@
 import { BACKEND_URL } from '@/config';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { DEFAULT_LANGUAGE, translateUi } from '../i18n';
 
 const API = `${BACKEND_URL || ''}/api`;
 
@@ -22,6 +23,18 @@ const storage = {
       localStorage.removeItem('b4b_token');
     } catch {}
   },
+  getLanguage: () => {
+    try {
+      return localStorage.getItem('b4b_language') || DEFAULT_LANGUAGE;
+    } catch {
+      return DEFAULT_LANGUAGE;
+    }
+  },
+  setLanguage: (language) => {
+    try {
+      localStorage.setItem('b4b_language', language);
+    } catch {}
+  },
 };
 
 
@@ -34,8 +47,16 @@ export function useApp() {
 export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(storage.getToken());
+  const [language, setLanguageState] = useState(storage.getLanguage());
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState(null);
+
+  const setLanguage = useCallback((nextLanguage) => {
+    setLanguageState(nextLanguage);
+    storage.setLanguage(nextLanguage);
+  }, []);
+
+  const t = useCallback((key) => translateUi(language, key), [language]);
 
   const authHeaders = useCallback(() => {
     if (!token) return {};
@@ -78,7 +99,8 @@ export function AppProvider({ children }) {
   }, []);
 
   const value = {
-    user, token, categories, stats,
+    user, token, categories, stats, language,
+    setLanguage, t,
     login, register, logout, authHeaders,
     API
   };
