@@ -79,12 +79,17 @@ export default function HomePage() {
             transition={{ duration: 0.7 }}
           >
             <div className="w-full lg:w-[68%] text-center mb-5">
-              <p className="text-xl md:text-2xl lg:text-3xl font-black uppercase leading-tight" style={{ color: "#050B14" }}>
-                An open global forum where marketing professionals share global marketing insights
+              <p className="text-xl md:text-2xl lg:text-3xl font-black uppercase leading-tight italic" style={{ color: "#050B14" }}>
+                Marketing has no borders.
               </p>
-              <p className="mt-3 text-base md:text-lg lg:text-xl font-extrabold uppercase leading-snug" style={{ color: "#050B14" }}>
-                From the people who work in them,<br />
-                city by city and block by block
+              <p className="mt-2 text-xl md:text-2xl lg:text-3xl font-black uppercase leading-tight" style={{ color: "#050B14" }}>
+                Neither do we.
+              </p>
+              <p className="mt-3 text-base md:text-lg lg:text-xl font-extrabold uppercase leading-snug italic" style={{ color: "#050B14" }}>
+                From Lagos to Los Angeles to London.
+              </p>
+              <p className="mt-3 text-sm md:text-base lg:text-lg font-bold leading-snug" style={{ color: "#10253A" }}>
+                Blogs 4 Blocks is the open global forum where marketing professionals share real strategies, honest insights, and hard-won lessons — discipline by discipline, city by city, and block by block.
               </p>
             </div>
 
