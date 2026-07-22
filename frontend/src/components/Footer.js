@@ -71,6 +71,7 @@ export default function Footer() {
             <div className="flex flex-col gap-3">
               <Link to="/" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-home">{t('home')}</Link>
               <Link to="/topics" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-topics">{t('topics')}</Link>
+              <Link to="/regions" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-regions">{t('regions')}</Link>
               <Link to="/write" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-write">{t('writePost')}</Link>
               <Link to="/about" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-about">{t('about')}</Link>
               <Link to="/auth" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-auth">{t('signInRegister')}</Link>

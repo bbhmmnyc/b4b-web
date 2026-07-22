@@ -14,7 +14,7 @@ import {
 } from '../components/ui/dropdown-menu';
 
 export default function Navbar() {
-  const { user, logout, categories, t } = useApp();
+  const { user, logout, categories, regions, t } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -99,6 +99,50 @@ export default function Navbar() {
                     </DropdownMenuItem>
                   );
                 })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${location.pathname.startsWith('/regions') ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  data-testid="nav-regions-dropdown"
+                >
+                  {t('regions')} <ChevronDown className="w-3 h-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="w-72 rounded-lg"
+                style={{
+                  background: 'rgba(218,228,242,0.97)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255,255,255,0.82)',
+                  boxShadow: '0 8px 32px rgba(20,40,80,0.12)',
+                }}
+              >
+                <DropdownMenuItem
+                  onClick={() => navigate('/regions')}
+                  data-testid="nav-all-regions"
+                  className="rounded-md mx-1 my-0.5 cursor-pointer font-semibold text-slate-800"
+                >
+                  {t('viewAllRegions')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator style={{ backgroundColor: 'rgba(30,50,80,0.10)' }} />
+                {(regions || []).slice(0, 8).map(region => (
+                  <DropdownMenuItem
+                    key={`${region.city}-${region.country}`}
+                    onClick={() => navigate(`/category/all?search=${encodeURIComponent(region.city)}`)}
+                    data-testid={`nav-region-${region.city.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="rounded-md mx-1 my-0.5 cursor-pointer"
+                  >
+                    <span className="font-medium text-sm text-slate-700">{region.city}</span>
+                    <span className="mx-1 text-slate-400">—</span>
+                    <span className="text-xs text-slate-500 truncate">{region.top_category_name}</span>
+                    <span className="ml-auto text-xs text-slate-400 font-mono">{region.post_count}</span>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -251,6 +295,7 @@ export default function Navbar() {
               <div className="px-1"><LanguageSelector /></div>
               <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('home')}</Link>
               <Link to="/topics" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('topics')}</Link>
+              <Link to="/regions" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('regions')}</Link>
               <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 no-underline transition-colors">{t('about')}</Link>
               <Link to="/advertise" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-amber-700 hover:text-amber-800 no-underline transition-colors">{t('advertise')}</Link>
               <Link to="/donate" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-red-700 hover:text-red-800 no-underline transition-colors">{t('donate')}</Link>

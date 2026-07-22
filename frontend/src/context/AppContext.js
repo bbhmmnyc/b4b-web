@@ -49,6 +49,7 @@ export function AppProvider({ children }) {
   const [token, setToken] = useState(storage.getToken());
   const [language, setLanguageState] = useState(storage.getLanguage());
   const [categories, setCategories] = useState([]);
+  const [regions, setRegions] = useState([]);
   const [stats, setStats] = useState(null);
 
   const setLanguage = useCallback((nextLanguage) => {
@@ -95,11 +96,12 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     axios.get(`${API}/categories`).then(res => setCategories(res.data)).catch(() => {});
+    axios.get(`${API}/regions?limit=8`).then(res => setRegions(res.data)).catch(() => {});
     axios.get(`${API}/stats`).then(res => setStats(res.data)).catch(() => {});
   }, []);
 
   const value = {
-    user, token, categories, stats, language,
+    user, token, categories, regions, stats, language,
     setLanguage, t,
     login, register, logout, authHeaders,
     API

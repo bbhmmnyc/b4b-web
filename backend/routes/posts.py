@@ -47,6 +47,10 @@ async def get_posts(
             {"title": {"$regex": safe_search, "$options": "i"}},
             {"content": {"$regex": safe_search, "$options": "i"}},
             {"tags": {"$regex": safe_search, "$options": "i"}},
+            {"author_name": {"$regex": safe_search, "$options": "i"}},
+            {"author_city": {"$regex": safe_search, "$options": "i"}},
+            {"author_country": {"$regex": safe_search, "$options": "i"}},
+            {"category_slug": {"$regex": safe_search, "$options": "i"}},
         ]})
 
     query = {"$and": filters} if filters else {}

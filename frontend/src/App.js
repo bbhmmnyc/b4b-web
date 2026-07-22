@@ -26,6 +26,7 @@ const DonatePage = lazy(() => import('./pages/DonatePage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const CareersPage = lazy(() => import('./pages/CareersPage'));
+const RegionsPage = lazy(() => import('./pages/RegionsPage'));
 
 function GoogleAnalytics() {
   const location = useLocation();
@@ -77,6 +78,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/topics" element={<TopicsPage />} />
+                <Route path="/regions" element={<RegionsPage />} />
                 <Route path="/careers" element={<CareersPage />} />
                 <Route path="/post/:id" element={<PostPage />} />
                 <Route path="/write" element={<WritePage />} />
