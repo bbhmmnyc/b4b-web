@@ -1,9 +1,10 @@
 import os
 from datetime import datetime, timezone
+from typing import Set
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response, RedirectResponse
 from database import db
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 router = APIRouter()
 
@@ -20,10 +21,33 @@ def _allowed_redirect_hosts():
         if not origin:
             continue
         parsed = urlparse(origin)
-        if parsed.scheme in {"http", "https"} and parsed.netloc:
-            hosts.add(parsed.netloc.lower())
+        if parsed.scheme in {"http", "https"} and parsed.hostname:
+            host = parsed.hostname.lower()
+            if parsed.port:
+                host = f"{host}:{parsed.port}"
+            hosts.add(host)
 
     return hosts
+
+
+def _normalized_redirect_url(url: str, allowed_hosts: Set[str]) -> str:
+    parsed = urlparse(url)
+
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise HTTPException(status_code=400, detail="Invalid redirect URL")
+
+    if parsed.username or parsed.password:
+        raise HTTPException(status_code=400, detail="Invalid redirect URL")
+
+    host = parsed.hostname.lower()
+    if parsed.port:
+        host = f"{host}:{parsed.port}"
+
+    if not allowed_hosts or host not in allowed_hosts:
+        raise HTTPException(status_code=400, detail="Redirect URL is not allowed")
+
+    netloc = host
+    return urlunparse((parsed.scheme, netloc, parsed.path or "/", "", parsed.query, ""))
 
 
 @router.get("/track/open")
@@ -46,22 +70,14 @@ async def track_email_open(d: str, e: str):
 
 @router.get("/track/click")
 async def track_email_click(d: str, e: str, url: str):
-    parsed = urlparse(url)
-
-    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-        raise HTTPException(status_code=400, detail="Invalid redirect URL")
-
-    allowed_hosts = _allowed_redirect_hosts()
-
-    if allowed_hosts and parsed.netloc.lower() not in allowed_hosts:
-        raise HTTPException(status_code=400, detail="Redirect URL is not allowed")
+    safe_url = _normalized_redirect_url(url, _allowed_redirect_hosts())
 
     await db.email_events.insert_one({
         "digest_id": d,
         "email_hash": e,
         "event_type": "click",
-        "url": url,
+        "url": safe_url,
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
 
-    return RedirectResponse(url=url)
+    return RedirectResponse(url=safe_url)

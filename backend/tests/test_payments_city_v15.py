@@ -9,6 +9,7 @@ Tests:
 """
 
 import pytest
+from urllib.parse import urlparse
 import requests
 import os
 import uuid
@@ -126,8 +127,10 @@ class TestCheckoutAPI:
         assert "booking_id" in data, "Response missing 'booking_id'"
         assert "total" in data, "Response missing 'total'"
         
-        # Verify URL is a Stripe checkout URL
-        assert "stripe.com" in data["url"] or "checkout" in data["url"], f"URL doesn't look like Stripe: {data['url']}"
+        # Verify URL is a Stripe checkout URL by parsing the hostname exactly.
+        checkout_host = urlparse(data["url"]).hostname or ""
+        allowed_stripe_hosts = {"checkout.stripe.com"}
+        assert checkout_host in allowed_stripe_hosts, f"URL doesn't look like Stripe: {data['url']}"
         
         # Verify total calculation (medium 4-runs = $630 * 1.0 = $630)
         assert data["total"] == 630.0, f"Expected total $630, got {data['total']}"
