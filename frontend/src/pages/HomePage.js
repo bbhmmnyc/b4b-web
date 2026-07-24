@@ -26,11 +26,10 @@ const CATEGORY_ICONS = {
 
 const MONO = { fontFamily: "'JetBrains Mono', monospace" };
 const CENTURY_GOTHIC_BOLD = { fontFamily: "'Century Gothic', 'Avenir Next', 'Montserrat', sans-serif", fontWeight: 900 };
-const metallicText = (color, shadowColor, highlightColor = 'rgba(255,255,255,0.78)') => ({
+const metallicText = (color, shadowColor, highlightColor = 'rgba(255,255,255,0.35)') => ({
   ...CENTURY_GOTHIC_BOLD,
   color,
-  WebkitTextStroke: `0.35px ${highlightColor}`,
-  textShadow: `0 1px 0 ${highlightColor}, 0 2px 0 rgba(255,255,255,0.30), 0 3px 5px ${shadowColor}, 0 0 1px rgba(0,0,0,0.70)`,
+  textShadow: `0 1px 0 ${highlightColor}, 0 2px 4px ${shadowColor}, 0 0 1px rgba(0,0,0,0.55)`,
 });
 
 const glassCard = {
@@ -88,17 +87,17 @@ export default function HomePage() {
           >
             <div className="w-[108%] lg:w-[118%] max-w-none mb-5 -ml-[4%] lg:-ml-[9%]">
               <div className="text-left">
-                <p className="text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText('#174A9A', 'rgba(6,26,62,0.50)')}>
+                <p className="text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText('#003F9E', 'rgba(0,24,70,0.62)')}>
                   Marketing Has No Borders.
                 </p>
-                <p className="mt-2 text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText('#A01E2C', 'rgba(78,7,16,0.48)', 'rgba(255,218,224,0.78)')}>
+                <p className="mt-2 text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText('#B00018', 'rgba(78,0,10,0.58)', 'rgba(255,218,224,0.34)')}>
                   Neither Do We.
                 </p>
-                <p className="mt-3 text-base md:text-lg lg:text-xl uppercase leading-snug" style={metallicText('#087E74', 'rgba(3,53,49,0.48)', 'rgba(205,255,248,0.78)')}>
+                <p className="mt-3 text-base md:text-lg lg:text-xl uppercase leading-snug" style={metallicText('#008C82', 'rgba(0,55,51,0.58)', 'rgba(205,255,248,0.30)')}>
                   From Lagos to Los Angeles To London
                 </p>
               </div>
-              <p className="mt-4 text-center text-sm md:text-base lg:text-lg leading-snug max-w-5xl mx-auto" style={metallicText('#111820', 'rgba(0,0,0,0.50)', 'rgba(255,255,255,0.82)')}>
+              <p className="mt-4 text-center text-sm md:text-base lg:text-lg leading-snug max-w-5xl mx-auto" style={{ ...CENTURY_GOTHIC_BOLD, color: '#020406', textShadow: '0 1px 2px rgba(255,255,255,0.28)' }}>
                 Blogs 4 Blocks is an open global forum where marketing professionals share real strategies, honest insights, and hard-won lessons — discipline by discipline, city by city, and block by block.
               </p>
             </div>
