@@ -25,6 +25,15 @@ const CATEGORY_ICONS = {
 };
 
 const MONO = { fontFamily: "'JetBrains Mono', monospace" };
+const CENTURY_GOTHIC_BOLD = { fontFamily: "'Century Gothic', 'Avenir Next', 'Montserrat', sans-serif", fontWeight: 900 };
+const metallicText = (colors) => ({
+  ...CENTURY_GOTHIC_BOLD,
+  background: `linear-gradient(135deg, ${colors.join(', ')})`,
+  WebkitBackgroundClip: 'text',
+  backgroundClip: 'text',
+  color: 'transparent',
+  textShadow: '0 1px 0 rgba(255,255,255,0.45), 0 2px 6px rgba(5,15,35,0.18)',
+});
 
 const glassCard = {
   background: 'rgba(255,255,255,0.68)',
@@ -78,18 +87,20 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <div className="w-full lg:w-[68%] text-center mb-5">
-              <p className="text-xl md:text-2xl lg:text-3xl font-black uppercase leading-tight italic" style={{ color: "#050B14" }}>
-                Marketing has no borders.
-              </p>
-              <p className="mt-2 text-xl md:text-2xl lg:text-3xl font-black uppercase leading-tight" style={{ color: "#050B14" }}>
-                Neither do we.
-              </p>
-              <p className="mt-3 text-base md:text-lg lg:text-xl font-extrabold uppercase leading-snug italic" style={{ color: "#050B14" }}>
-                From Lagos to Los Angeles to London.
-              </p>
-              <p className="mt-3 text-sm md:text-base lg:text-lg font-bold leading-snug" style={{ color: "#10253A" }}>
-                Blogs 4 Blocks is the open global forum where marketing professionals share real strategies, honest insights, and hard-won lessons — discipline by discipline, city by city, and block by block. What works in your market, from the people who work in it.
+            <div className="w-[108%] lg:w-[118%] max-w-none mb-5 -ml-[4%] lg:-ml-[9%]">
+              <div className="text-left">
+                <p className="text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText(['#102B58 0%', '#2E65B8 34%', '#DCEBFF 50%', '#174A9A 66%', '#071A38 100%'])}>
+                  Marketing Has No Borders.
+                </p>
+                <p className="mt-2 text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText(['#681019 0%', '#B51F31 34%', '#FFD7DC 50%', '#9B1726 66%', '#4E0710 100%'])}>
+                  Neither Do We.
+                </p>
+                <p className="mt-3 text-base md:text-lg lg:text-xl uppercase leading-snug" style={metallicText(['#064D49 0%', '#0C9C8F 34%', '#C9FFF7 50%', '#087E74 66%', '#033531 100%'])}>
+                  From Lagos to Los Angeles To London
+                </p>
+              </div>
+              <p className="mt-4 text-center text-sm md:text-base lg:text-lg leading-snug max-w-5xl mx-auto" style={metallicText(['#05070A 0%', '#303741 32%', '#EEF3F8 50%', '#141A22 68%', '#000000 100%'])}>
+                Blogs 4 Blocks is an open global forum where marketing professionals share real strategies, honest insights, and hard-won lessons — discipline by discipline, city by city, and block by block.
               </p>
             </div>
 
