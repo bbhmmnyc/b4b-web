@@ -89,7 +89,7 @@ export default function HomePage() {
                 From Lagos to Los Angeles to London.
               </p>
               <p className="mt-3 text-sm md:text-base lg:text-lg font-bold leading-snug" style={{ color: "#10253A" }}>
-                Blogs 4 Blocks is the open global forum where marketing professionals share real strategies, honest insights, and hard-won lessons — discipline by discipline, city by city, and block by block.
+                Blogs 4 Blocks is the open global forum where marketing professionals share real strategies, honest insights, and hard-won lessons — discipline by discipline, city by city, and block by block. What works in your market, from the people who work in it.
               </p>
             </div>
 
