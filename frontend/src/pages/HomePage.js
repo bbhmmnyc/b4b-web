@@ -26,13 +26,11 @@ const CATEGORY_ICONS = {
 
 const MONO = { fontFamily: "'JetBrains Mono', monospace" };
 const CENTURY_GOTHIC_BOLD = { fontFamily: "'Century Gothic', 'Avenir Next', 'Montserrat', sans-serif", fontWeight: 900 };
-const metallicText = (colors) => ({
+const metallicText = (color, shadowColor, highlightColor = 'rgba(255,255,255,0.78)') => ({
   ...CENTURY_GOTHIC_BOLD,
-  background: `linear-gradient(135deg, ${colors.join(', ')})`,
-  WebkitBackgroundClip: 'text',
-  backgroundClip: 'text',
-  color: 'transparent',
-  textShadow: '0 1px 0 rgba(255,255,255,0.45), 0 2px 6px rgba(5,15,35,0.18)',
+  color,
+  WebkitTextStroke: `0.35px ${highlightColor}`,
+  textShadow: `0 1px 0 ${highlightColor}, 0 2px 0 rgba(255,255,255,0.30), 0 3px 5px ${shadowColor}, 0 0 1px rgba(0,0,0,0.70)`,
 });
 
 const glassCard = {
@@ -83,23 +81,24 @@ export default function HomePage() {
       <section className="relative overflow-hidden hero-label" style={{ borderBottom: '1px solid rgba(30,50,80,0.10)' }} data-testid="hero-section">
         <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-20">
           <motion.div
+            className="relative z-10"
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
             <div className="w-[108%] lg:w-[118%] max-w-none mb-5 -ml-[4%] lg:-ml-[9%]">
               <div className="text-left">
-                <p className="text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText(['#102B58 0%', '#2E65B8 34%', '#DCEBFF 50%', '#174A9A 66%', '#071A38 100%'])}>
+                <p className="text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText('#174A9A', 'rgba(6,26,62,0.50)')}>
                   Marketing Has No Borders.
                 </p>
-                <p className="mt-2 text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText(['#681019 0%', '#B51F31 34%', '#FFD7DC 50%', '#9B1726 66%', '#4E0710 100%'])}>
+                <p className="mt-2 text-xl md:text-2xl lg:text-3xl uppercase leading-tight" style={metallicText('#A01E2C', 'rgba(78,7,16,0.48)', 'rgba(255,218,224,0.78)')}>
                   Neither Do We.
                 </p>
-                <p className="mt-3 text-base md:text-lg lg:text-xl uppercase leading-snug" style={metallicText(['#064D49 0%', '#0C9C8F 34%', '#C9FFF7 50%', '#087E74 66%', '#033531 100%'])}>
+                <p className="mt-3 text-base md:text-lg lg:text-xl uppercase leading-snug" style={metallicText('#087E74', 'rgba(3,53,49,0.48)', 'rgba(205,255,248,0.78)')}>
                   From Lagos to Los Angeles To London
                 </p>
               </div>
-              <p className="mt-4 text-center text-sm md:text-base lg:text-lg leading-snug max-w-5xl mx-auto" style={metallicText(['#05070A 0%', '#303741 32%', '#EEF3F8 50%', '#141A22 68%', '#000000 100%'])}>
+              <p className="mt-4 text-center text-sm md:text-base lg:text-lg leading-snug max-w-5xl mx-auto" style={metallicText('#111820', 'rgba(0,0,0,0.50)', 'rgba(255,255,255,0.82)')}>
                 Blogs 4 Blocks is an open global forum where marketing professionals share real strategies, honest insights, and hard-won lessons — discipline by discipline, city by city, and block by block.
               </p>
             </div>
