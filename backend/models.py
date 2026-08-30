@@ -1,5 +1,15 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List
+from urllib.parse import urlparse
+
+
+def _validate_http_url(value: Optional[str]) -> Optional[str]:
+    if value is None or not value.strip():
+        return None
+    parsed = urlparse(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
+        raise ValueError("must be a valid http(s) URL")
+    return value
 
 
 class UserCreate(BaseModel):
@@ -45,6 +55,15 @@ class PostCreate(BaseModel):
     guest_author: Optional[GuestAuthor] = None
     co_authors: List[str] = Field(default_factory=list, max_length=10)
 
+    @field_validator("cover_image")
+    @classmethod
+    def validate_cover_image(cls, value):
+        if value is None:
+            return None
+        if not value.startswith("/api/uploads/"):
+            raise ValueError("cover_image must reference an uploaded image")
+        return value
+
 class CommentCreate(BaseModel):
     content: str
     author_name: Optional[str] = None
@@ -70,6 +89,15 @@ class PostUpdate(BaseModel):
     cover_image: Optional[str] = None
     language: Optional[str] = None
     co_authors: Optional[List[str]] = None
+
+    @field_validator("cover_image")
+    @classmethod
+    def validate_cover_image(cls, value):
+        if value is None:
+            return None
+        if not value.startswith("/api/uploads/"):
+            raise ValueError("cover_image must reference an uploaded image")
+        return value
 
 class TranslationRequest(BaseModel):
     title: Optional[str] = Field(default=None, max_length=1000)
@@ -102,6 +130,11 @@ class SponsorInfo(BaseModel):
     sponsor_name: str
     sponsor_url: Optional[str] = None
     sponsor_logo: Optional[str] = None
+
+    @field_validator("sponsor_url", "sponsor_logo")
+    @classmethod
+    def validate_urls(cls, value):
+        return _validate_http_url(value)
 
 class AdInquiry(BaseModel):
     company_name: str = Field(..., min_length=2, max_length=120)

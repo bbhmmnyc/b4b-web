@@ -1,5 +1,5 @@
 import os
-import hashlib
+import hmac
 import html as html_lib
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter
@@ -8,6 +8,13 @@ from models import NewsletterSubscribe
 from email_service import send_email_notification
 
 router = APIRouter()
+
+
+def _email_tracking_hash(email: str) -> str | None:
+    key = os.environ.get("EMAIL_HASH_KEY")
+    if not key:
+        return None
+    return hmac.digest(key.encode("utf-8"), email.encode("utf-8"), "sha256").hex()[:24]
 
 
 @router.post("/newsletter/subscribe")
@@ -84,22 +91,22 @@ async def _send_weekly_digest(selected_post_ids=None, intro_note=None):
     sent_count = 0
     errors = 0
     for email in subscriber_emails:
-        email_hash = hashlib.md5(email.encode()).hexdigest()[:12]
+        email_hash = _email_tracking_hash(email)
 
         posts_html = ""
         for p in top_posts:
             post_url = f"{site_url}/post/{p['id']}" if site_url else f"/post/{p['id']}"
-            tracked_url = f"{site_url}/api/track/click?d={digest_id}&e={email_hash}&url={post_url}" if site_url else post_url
+            tracked_url = f"{site_url}/api/track/click?d={digest_id}&e={email_hash}&url={post_url}" if site_url and email_hash else post_url
             posts_html += f"""
             <a href="{tracked_url}" style="text-decoration: none; display: block;">
               <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #3B82F6;">
-                <h3 style="color: #0F172A; font-size: 15px; margin: 0 0 6px 0; font-weight: 700;">{p['title']}</h3>
-                <p style="color: #64748B; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">{p.get('excerpt', '')[:150]}</p>
-                <div style="font-size: 12px; color: #94A3B8;">By {p.get('author_name', 'Unknown')} from {p.get('author_city', '')} &middot; {p.get('likes', 0)} likes</div>
+              <h3 style="color: #0F172A; font-size: 15px; margin: 0 0 6px 0; font-weight: 700;">{html_lib.escape(p['title'])}</h3>
+              <p style="color: #64748B; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">{html_lib.escape(p.get('excerpt', '')[:150])}</p>
+              <div style="font-size: 12px; color: #94A3B8;">By {html_lib.escape(p.get('author_name', 'Unknown'))} from {html_lib.escape(p.get('author_city', ''))} &middot; {p.get('likes', 0)} likes</div>
               </div>
             </a>"""
 
-        tracking_pixel = f'<img src="{site_url}/api/track/open?d={digest_id}&e={email_hash}" width="1" height="1" style="display:none" />' if site_url else ''
+        tracking_pixel = f'<img src="{site_url}/api/track/open?d={digest_id}&e={email_hash}" width="1" height="1" style="display:none" />' if site_url and email_hash else ''
 
         html = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">

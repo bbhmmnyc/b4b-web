@@ -41,8 +41,8 @@ class AdBookingRequest(BaseModel):
     advertiser: str
     contact_name: str
     email: str
-    phone: Optional[str]= "212-347-4467"
-    campaign_name: Optional[str]= "blogs4blocks" 
+    phone: Optional[str] = None
+    campaign_name: Optional[str] = None
     origin_url: str
 
 

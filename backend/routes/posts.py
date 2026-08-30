@@ -1,5 +1,6 @@
 import uuid
 import re
+import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
@@ -17,6 +18,31 @@ def public_author_name(user):
 
 def guest_content_has_links(content: str) -> bool:
     return bool(re.search(r'(<a\b|href\s*=|https?://|www\.)', content or "", re.IGNORECASE))
+
+
+async def resolve_partner_coauthors(user_id: str, co_author_ids: list[str]) -> list[dict]:
+    """Resolve co-authors while enforcing the same partnership rule as post creation."""
+    co_author_docs = []
+    for co_author_id in co_author_ids:
+        if not isinstance(co_author_id, str) or co_author_id == user_id:
+            raise HTTPException(status_code=422, detail="Invalid co-author")
+        partnership = await db.partnerships.find_one({
+            "status": "accepted",
+            "$or": [
+                {"requester_id": user_id, "target_id": co_author_id},
+                {"requester_id": co_author_id, "target_id": user_id},
+            ],
+        })
+        if not partnership:
+            raise HTTPException(status_code=403, detail="Co-authors must be accepted partners")
+        co_author = await db.users.find_one(
+            {"id": co_author_id},
+            {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1, "country": 1},
+        )
+        if not co_author:
+            raise HTTPException(status_code=422, detail="Co-author not found")
+        co_author_docs.append({"id": co_author["id"], "name": public_author_name(co_author), "registered_name": co_author.get("name", ""), "city": co_author["city"], "country": co_author["country"]})
+    return co_author_docs
 
 
 @router.get("/posts")
@@ -169,28 +195,12 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
         post_doc["expires_at"] = None
         # Resolve co-authors (must be accepted partners)
         if post.co_authors:
-            co_author_docs = []
-            for ca_id in post.co_authors:
-                partnership = await db.partnerships.find_one({
-                    "status": "accepted",
-                    "$or": [
-                        {"requester_id": user["id"], "target_id": ca_id},
-                        {"requester_id": ca_id, "target_id": user["id"]}
-                    ]
-                })
-                if partnership:
-                    ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1, "country": 1})
-                    if ca_user:
-                        co_author_docs.append({"id": ca_user["id"], "name": public_author_name(ca_user), "registered_name": ca_user.get("name", ""), "city": ca_user["city"], "country": ca_user["country"]})
-            post_doc["co_authors"] = co_author_docs
+            post_doc["co_authors"] = await resolve_partner_coauthors(user["id"], post.co_authors)
     else:
         raise HTTPException(status_code=400, detail="Must provide guest author info or be logged in")
     await db.posts.insert_one(post_doc)
     if user and not is_guest:
-        try:
-            await notify_new_post_to_all_users(post_doc)
-        except Exception:
-            pass
+        asyncio.create_task(notify_new_post_to_all_users(post_doc))
     return {k: v for k, v in post_doc.items() if k != "_id"}
 
 
@@ -236,13 +246,7 @@ async def update_post(post_id: str, update: PostUpdate, user=Depends(require_use
             raise HTTPException(status_code=403, detail="You can only edit your own posts")
     update_fields = {k: v for k, v in update.model_dump().items() if v is not None}
     if "co_authors" in update_fields and isinstance(update_fields["co_authors"], list):
-        co_author_docs = []
-        for ca_id in update_fields["co_authors"]:
-            if isinstance(ca_id, str):
-                ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1, "country": 1})
-                if ca_user:
-                    co_author_docs.append({"id": ca_user["id"], "name": public_author_name(ca_user), "registered_name": ca_user.get("name", ""), "city": ca_user["city"], "country": ca_user["country"]})
-        update_fields["co_authors"] = co_author_docs
+        update_fields["co_authors"] = await resolve_partner_coauthors(user["id"], update_fields["co_authors"])
     update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.posts.update_one({"id": post_id}, {"$set": update_fields})
     updated = await db.posts.find_one({"id": post_id}, {"_id": 0})
