@@ -1,7 +1,9 @@
 import uuid
+from io import BytesIO
 from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 import aiofiles
+from PIL import Image, UnidentifiedImageError
 from auth import require_user
 
 router = APIRouter()
@@ -35,7 +37,14 @@ async def upload_image(file: UploadFile = File(...), user=Depends(require_user))
         ".gif": [b"GIF87a", b"GIF89a"],
         ".webp": [b"RIFF"],
     }
-    if not any(content.startswith(sig) for sig in signatures[ext]):
+    is_webp = ext == ".webp" and len(content) >= 12 and content[8:12] == b"WEBP"
+    if not any(content.startswith(sig) for sig in signatures[ext]) or (ext == ".webp" and not is_webp):
+        raise HTTPException(status_code=400, detail="Invalid image file")
+
+    try:
+        with Image.open(BytesIO(content)) as image:
+            image.verify()
+    except (UnidentifiedImageError, OSError, ValueError):
         raise HTTPException(status_code=400, detail="Invalid image file")
 
     filename = f"{uuid.uuid4()}{ext}"

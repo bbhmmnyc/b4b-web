@@ -100,8 +100,10 @@ async def admin_delete_comment(comment_id: str, user=Depends(require_admin)):
 
 
 @router.get("/admin/users")
-async def admin_list_users(user=Depends(require_admin)):
-    users = await db.users.find({}, {"_id": 0, "password": 0}).sort("created_at", -1).to_list(1000)
+async def admin_list_users(skip: int = 0, limit: int = 100, user=Depends(require_admin)):
+    skip = max(0, skip)
+    limit = max(1, min(limit, 500))
+    users = await db.users.find({}, {"_id": 0, "password": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     return users
 
 
@@ -138,8 +140,10 @@ async def get_digest_status(user=Depends(require_admin)):
 
 
 @router.get("/admin/subscribers")
-async def get_subscribers(user=Depends(require_admin)):
-    subscribers = await db.newsletter.find({}, {"_id": 0}).sort("subscribed_at", -1).to_list(5000)
+async def get_subscribers(skip: int = 0, limit: int = 100, user=Depends(require_admin)):
+    skip = max(0, skip)
+    limit = max(1, min(limit, 500))
+    subscribers = await db.newsletter.find({}, {"_id": 0}).sort("subscribed_at", -1).skip(skip).limit(limit).to_list(limit)
     return subscribers
 
 

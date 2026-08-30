@@ -1,5 +1,7 @@
 import os
 import logging
+import html
+import asyncio
 import resend
 import urllib.request
 import urllib.error
@@ -13,7 +15,7 @@ BREVO_API_KEY = os.environ.get('BREVO_API_KEY')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
 
 
-async def send_email_notification(to_email: str, subject: str, html_content: str):
+def _send_email_notification_sync(to_email: str, subject: str, html_content: str):
     """Send an email notification using Brevo when configured, otherwise Resend."""
     if BREVO_API_KEY:
         payload = {
@@ -56,6 +58,11 @@ async def send_email_notification(to_email: str, subject: str, html_content: str
         logger.error(f"Failed to send email to {to_email}: {e}")
 
 
+async def send_email_notification(to_email: str, subject: str, html_content: str):
+    """Run synchronous provider SDKs outside FastAPI's event loop."""
+    await asyncio.to_thread(_send_email_notification_sync, to_email, subject, html_content)
+
+
 async def notify_post_author_of_comment(post, comment_doc):
     """Notify the post author when someone comments"""
     if not post.get("author_id"):
@@ -66,7 +73,10 @@ async def notify_post_author_of_comment(post, comment_doc):
     # Don't notify if author commented on their own post
     if comment_doc.get("author_name") == author.get("name"):
         return
-    html = f"""
+    safe_author = html.escape(comment_doc.get("author_name", ""))
+    safe_title = html.escape(post.get("title", ""))
+    safe_content = html.escape(comment_doc.get("content", "")[:300]).replace("\n", "<br />")
+    html_content = f"""
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
       <div style="text-align: center; margin-bottom: 24px;">
         <span style="font-weight: 900; font-size: 22px;">
@@ -77,25 +87,29 @@ async def notify_post_author_of_comment(post, comment_doc):
       </div>
       <h2 style="color: #0F172A; font-size: 18px;">New Comment on Your Post</h2>
       <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-        <strong>{comment_doc['author_name']}</strong> commented on <strong>"{post['title']}"</strong>:
+        <strong>{safe_author}</strong> commented on <strong>"{safe_title}"</strong>:
       </p>
       <div style="background: #F1F5F9; border-radius: 12px; padding: 16px; margin: 16px 0;">
-        <p style="color: #475569; font-size: 14px; line-height: 1.5; margin: 0;">{comment_doc['content'][:300]}</p>
+        <p style="color: #475569; font-size: 14px; line-height: 1.5; margin: 0;">{safe_content}</p>
       </div>
       <p style="color: #94A3B8; font-size: 12px; margin-top: 24px;">You're receiving this because someone commented on your post.</p>
     </div>
     """
-    await send_email_notification(author["email"], f"New comment on \"{post['title']}\"", html)
+    await send_email_notification(author["email"], f"New comment on \"{safe_title}\"", html_content)
 
 
 async def notify_new_post_to_all_users(post_doc):
     """Notify all registered users about a new post"""
     all_users = await db.users.find({}, {"_id": 0, "email": 1, "id": 1}).to_list(1000)
     author_id = post_doc.get("author_id")
-    for u in all_users:
+    async def send_to_user(u):
         if u["id"] == author_id:
-            continue
-        html = f"""
+            return
+        safe_title = html.escape(post_doc.get("title", ""))
+        safe_excerpt = html.escape(post_doc.get("excerpt", "")[:200])
+        safe_author = html.escape(post_doc.get("author_name", "Unknown"))
+        safe_city = html.escape(post_doc.get("author_city", ""))
+        html_content = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
           <div style="text-align: center; margin-bottom: 24px;">
             <span style="font-weight: 900; font-size: 22px;">
@@ -106,14 +120,18 @@ async def notify_new_post_to_all_users(post_doc):
           </div>
           <h2 style="color: #0F172A; font-size: 18px;">New Post Published</h2>
           <div style="background: #F8FAFC; border-radius: 12px; padding: 20px; margin: 16px 0; border-left: 4px solid #3B82F6;">
-            <h3 style="color: #0F172A; font-size: 16px; margin: 0 0 8px 0;">{post_doc['title']}</h3>
-            <p style="color: #64748B; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">{post_doc.get('excerpt', '')[:200]}</p>
-            <p style="color: #94A3B8; font-size: 12px; margin: 0;">By {post_doc.get('author_name', 'Unknown')} from {post_doc.get('author_city', '')}</p>
+            <h3 style="color: #0F172A; font-size: 16px; margin: 0 0 8px 0;">{safe_title}</h3>
+            <p style="color: #64748B; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">{safe_excerpt}</p>
+            <p style="color: #94A3B8; font-size: 12px; margin: 0;">By {safe_author} from {safe_city}</p>
           </div>
           <p style="color: #94A3B8; font-size: 12px; margin-top: 24px;">You're receiving this as a Blogs 4 Blocks community member.</p>
         </div>
         """
         try:
-            await send_email_notification(u["email"], f"New Post: {post_doc['title']}", html)
+            await send_email_notification(u["email"], f"New Post: {safe_title}", html_content)
         except Exception:
             pass
+
+    # Keep concurrency bounded so a large audience cannot overwhelm the mail provider.
+    for start in range(0, len(all_users), 20):
+        await asyncio.gather(*(send_to_user(u) for u in all_users[start:start + 20]))

@@ -1,11 +1,12 @@
 import os
 import uuid
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from database import db
 from auth import hash_password, verify_password, create_token, require_user
 from models import UserCreate, UserLogin
 from email_service import send_email_notification
+from rate_limit import auth_limiter
 
 router = APIRouter()
 
@@ -57,7 +58,8 @@ async def _send_verification_email(user_doc):
 
 
 @router.post("/auth/register")
-async def register(user: UserCreate):
+async def register(user: UserCreate, request: Request):
+    auth_limiter.check(request, "register", maximum=5, window_seconds=60)
     existing = await db.users.find_one({"email": user.email})
     if existing:
         from fastapi import HTTPException
@@ -90,7 +92,8 @@ async def register(user: UserCreate):
 
 
 @router.post("/auth/login")
-async def login(creds: UserLogin):
+async def login(creds: UserLogin, request: Request):
+    auth_limiter.check(request, "login", maximum=10, window_seconds=60)
     user = await db.users.find_one({"email": creds.email}, {"_id": 0})
     if not user or not verify_password(creds.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
