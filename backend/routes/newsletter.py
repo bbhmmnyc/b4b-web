@@ -1,8 +1,10 @@
 import os
 import hmac
 import html as html_lib
+import uuid
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import RedirectResponse
 from database import db
 from models import NewsletterSubscribe
 from email_service import send_email_notification
@@ -17,26 +19,64 @@ def _email_tracking_hash(email: str) -> str | None:
     return hmac.digest(key.encode("utf-8"), email.encode("utf-8"), "sha256").hex()[:24]
 
 
+async def _send_subscription_confirmation(email: str, token: str) -> None:
+    site_url = (os.environ.get("SITE_URL") or "").rstrip("/")
+    if not site_url:
+        raise HTTPException(status_code=503, detail="Newsletter confirmation is not configured")
+    confirmation_url = f"{site_url}/api/newsletter/confirm?token={token}"
+    html_content = f"""
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+      <h2 style="color:#0F172A;">Confirm your newsletter subscription</h2>
+      <p style="color:#334155; line-height:1.6;">Please confirm that you want to receive the Blogs 4 Blocks weekly digest.</p>
+      <p><a href="{confirmation_url}" style="background:#0A7A6A;color:white;padding:12px 18px;text-decoration:none;font-weight:700;">Confirm subscription</a></p>
+      <p style="color:#64748B;font-size:12px;">This link expires in 48 hours. If you did not request this, you can ignore this email.</p>
+    </div>
+    """
+    await send_email_notification(email, "Confirm your Blogs 4 Blocks newsletter subscription", html_content)
+
+
 @router.post("/newsletter/subscribe")
 async def newsletter_subscribe(data: NewsletterSubscribe):
-    existing = await db.newsletter.find_one({"email": data.email})
+    email = str(data.email).lower()
+    existing = await db.newsletter.find_one({"email": email})
     if existing:
         if existing.get("active"):
             return {"message": "You're already subscribed!", "subscribed": True}
-        await db.newsletter.update_one({"email": data.email}, {"$set": {"active": True}})
-        return {"message": "Welcome back! You've been re-subscribed.", "subscribed": True}
-    await db.newsletter.insert_one({
-        "email": data.email,
-        "name": data.name or "",
-        "active": True,
-        "subscribed_at": datetime.now(timezone.utc).isoformat()
-    })
-    return {"message": "You're subscribed to the weekly digest!", "subscribed": True}
+    now = datetime.now(timezone.utc)
+    token = str(uuid.uuid4())
+    await db.newsletter.update_one(
+        {"email": email},
+        {"$set": {"email": email, "name": data.name or "", "active": False, "pending_confirmation": True, "updated_at": now.isoformat()},
+         "$setOnInsert": {"subscribed_at": now.isoformat()}},
+        upsert=True,
+    )
+    await db.newsletter_confirmations.update_one(
+        {"email": email},
+        {"$set": {"email": email, "token": token, "created_at": now.isoformat(), "expires_at": (now + timedelta(days=2)).isoformat()}},
+        upsert=True,
+    )
+    await _send_subscription_confirmation(email, token)
+    return {"message": "Check your email to confirm your subscription.", "subscribed": False, "confirmation_required": True}
+
+
+@router.get("/newsletter/confirm")
+async def confirm_newsletter_subscription(token: str):
+    now_iso = datetime.now(timezone.utc).isoformat()
+    confirmation = await db.newsletter_confirmations.find_one({"token": token, "expires_at": {"$gt": now_iso}}, {"_id": 0})
+    if not confirmation:
+        raise HTTPException(status_code=400, detail="Confirmation link is invalid or expired")
+    await db.newsletter.update_one(
+        {"email": confirmation["email"]},
+        {"$set": {"active": True, "pending_confirmation": False, "confirmed_at": now_iso, "updated_at": now_iso}},
+    )
+    await db.newsletter_confirmations.delete_one({"token": token})
+    site_url = (os.environ.get("SITE_URL") or "").rstrip("/")
+    return RedirectResponse(url=f"{site_url}/?newsletter=confirmed" if site_url else "/")
 
 
 @router.post("/newsletter/unsubscribe")
 async def newsletter_unsubscribe(data: NewsletterSubscribe):
-    result = await db.newsletter.update_one({"email": data.email}, {"$set": {"active": False}})
+    result = await db.newsletter.update_one({"email": str(data.email).lower()}, {"$set": {"active": False, "pending_confirmation": False}})
     if result.matched_count == 0:
         return {"message": "Email not found in subscribers", "unsubscribed": False}
     return {"message": "You've been unsubscribed", "unsubscribed": True}
