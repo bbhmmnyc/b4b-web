@@ -107,8 +107,8 @@ class TranslationRequest(BaseModel):
     source_language: Optional[str] = Field(default="auto", max_length=12)
 
 class NewsletterSubscribe(BaseModel):
-    email: str
-    name: Optional[str] = None
+    email: EmailStr
+    name: Optional[str] = Field(default=None, max_length=120)
 
 class DonationCheckoutRequest(BaseModel):
     amount: float = Field(..., ge=1, le=5000)

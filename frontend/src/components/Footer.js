@@ -19,9 +19,9 @@ export default function Footer() {
     if (!email.trim()) return;
     setSubscribing(true);
     try {
-      await axios.post(`${API}/newsletter/subscribe`, { email: email.trim() });
+      const response = await axios.post(`${API}/newsletter/subscribe`, { email: email.trim() });
       setSubscribed(true);
-      toast.success('Subscribed to weekly digest!');
+      toast.success(response.data.message);
     } catch (err) {
       toast.error('Failed to subscribe');
     }
@@ -89,7 +89,7 @@ export default function Footer() {
             <h4 className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#666] mb-6">{t('weeklyDigest')}</h4>
             {subscribed ? (
               <div className="flex items-center gap-2 text-brand-green text-sm font-medium mb-6" data-testid="footer-subscribed">
-                <Check className="w-4 h-4" /> {t('subscribed')}
+                <Check className="w-4 h-4" /> Check your email to confirm your subscription.
               </div>
             ) : (
               <form onSubmit={handleSubscribe} className="mb-6" data-testid="footer-newsletter-form">

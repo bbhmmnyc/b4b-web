@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from database import db, client
@@ -33,6 +34,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server")
 
 app = FastAPI(title="Blogs 4 Blocks API")
+
+trusted_proxy_hosts = [host.strip() for host in os.environ.get("TRUSTED_PROXY_HOSTS", "127.0.0.1,::1").split(",") if host.strip()]
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=trusted_proxy_hosts)
 
 cors_origins = [
     origin.strip()
@@ -109,6 +113,9 @@ async def startup():
     await db.categories.create_index("slug", unique=True)
     await db.subcategories.create_index("slug", unique=True)
     await db.newsletter.create_index("email", unique=True)
+    await db.newsletter_confirmations.create_index("email", unique=True)
+    await db.newsletter_confirmations.create_index("token", unique=True)
+    await db.newsletter_confirmations.create_index("expires_at", expireAfterSeconds=0)
     await db.digest_log.create_index("sent_at")
     await db.partnerships.create_index([("requester_id", 1), ("target_id", 1)], unique=True)
     await db.partnerships.create_index("status")

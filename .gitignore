@@ -42,6 +42,7 @@ dist/
 # Credentials and tokens
 *token.json*
 *credentials.json*
+client_secret_*.json
 
 # Logs and debug files
 npm-debug.log*

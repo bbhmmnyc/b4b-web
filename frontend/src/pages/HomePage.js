@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import BlogCard from '../components/BlogCard';
@@ -43,6 +43,7 @@ const glassCard = {
 export default function HomePage() {
   const { categories, stats, API } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [posts, setPosts] = useState([]);
   const [popularPosts, setPopularPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +56,13 @@ export default function HomePage() {
     axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => { });
   }, [API]);
 
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('newsletter') === 'confirmed') {
+      toast.success('Your newsletter subscription is confirmed.');
+      navigate('/', { replace: true });
+    }
+  }, [location.search, navigate]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) navigate(`/category/all?search=${encodeURIComponent(searchQuery.trim())}`);
@@ -65,9 +73,9 @@ export default function HomePage() {
     if (!newsletterEmail.trim()) return;
     setSubscribing(true);
     try {
-      await axios.post(`${API}/newsletter/subscribe`, { email: newsletterEmail.trim() });
+      const response = await axios.post(`${API}/newsletter/subscribe`, { email: newsletterEmail.trim() });
       setSubscribed(true);
-      toast.success('You\'re subscribed to the weekly digest!');
+      toast.success(response.data.message);
     } catch (err) {
       toast.error('Failed to subscribe. Try again.');
     }
@@ -364,7 +372,7 @@ export default function HomePage() {
               <p className="text-sm leading-relaxed mb-6" style={{ color: '#4A5A70' }}>Every Monday — top posts, trending topics, and fresh perspectives from marketing professionals worldwide.</p>
               {subscribed ? (
                 <div className="flex items-center gap-3 text-sm font-bold" style={{ color: '#0A7A6A' }}>
-                  <Check className="w-5 h-5" /> You're subscribed — see you Monday!
+                  <Check className="w-5 h-5" /> Check your email to confirm your subscription.
                 </div>
               ) : (
                 <form onSubmit={handleSubscribe} className="flex gap-3 max-w-md">
