@@ -52,8 +52,8 @@ export default function HomePage() {
   const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
-    axios.get(`${API}/posts?limit=6`).then(res => setPosts(res.data.posts)).catch(() => { });
-    axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => { });
+    axios.get(`${API}/posts?limit=3`).then(res => setPosts(res.data.posts)).catch(() => { });
+    axios.get(`${API}/posts/popular/list?limit=3`).then(res => setPopularPosts(res.data)).catch(() => { });
   }, [API]);
 
   useEffect(() => {
@@ -175,7 +175,7 @@ export default function HomePage() {
               className="w-full flex flex-col items-center"
             >
               <div
-                className="w-full max-w-lg p-6 text-left"
+                className="w-full max-w-lg p-6 text-left float-card-wrapper"
                 style={{ ...glassCard, borderRadius: 0, borderTop: "3px solid #A01E2C" }}
                 data-testid="blog-of-week"
               >
@@ -222,6 +222,13 @@ export default function HomePage() {
                     <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#4A5A70' }}>{stat.label}</span>
                   </div>
                 ))}
+                <Link
+                  to="/stats"
+                  className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.22em] no-underline ml-2"
+                  style={{ color: '#1A4A8A' }}
+                >
+                  Full Stats <ArrowRight className="w-3 h-3" />
+                </Link>
               </motion.div>
             )}
           </div>
@@ -282,12 +289,17 @@ export default function HomePage() {
               <p className="text-xs font-bold uppercase tracking-[0.25em] mb-3" style={{ ...MONO, color: '#0A7A6A' }}>// Fresh Perspectives</p>
               <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#1A2A3C' }} data-testid="latest-heading">Latest Discussions</h2>
             </div>
-            <Link to="/category/all" className="hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-widest no-underline" style={{ color: '#0A7A6A' }} data-testid="view-all-posts">
-              View All <ArrowRight className="w-3.5 h-3.5" />
+            <Link to="/discussions" className="hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-widest no-underline" style={{ color: '#0A7A6A' }} data-testid="view-all-posts">
+              See All Contributions <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="posts-grid">
             {posts.map((post, i) => <BlogCard key={post.id} post={post} index={i} />)}
+          </div>
+          <div className="flex justify-center mt-10 sm:hidden">
+            <Link to="/discussions" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest no-underline" style={{ color: '#0A7A6A' }}>
+              See All Contributions <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </section>
@@ -295,15 +307,25 @@ export default function HomePage() {
       {popularPosts.length > 0 && (
         <section className="py-20 md:py-28" style={{ borderBottom: '1px solid rgba(30,50,80,0.09)' }} data-testid="popular-posts-section">
           <div className="max-w-7xl mx-auto px-6 md:px-12">
-            <div className="mb-14">
-              <div className="flex items-center gap-3 mb-3">
-                <Flame className="w-4 h-4" style={{ color: '#C04030' }} />
-                <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ ...MONO, color: '#0A7A6A' }}>// Most Engaged</p>
+            <div className="flex items-end justify-between mb-14">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <Flame className="w-4 h-4" style={{ color: '#C04030' }} />
+                  <p className="text-xs font-bold uppercase tracking-[0.25em]" style={{ ...MONO, color: '#0A7A6A' }}>// Most Engaged</p>
+                </div>
+                <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#1A2A3C' }} data-testid="popular-heading">Trending Now</h2>
               </div>
-              <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight" style={{ color: '#1A2A3C' }} data-testid="popular-heading">Trending Now</h2>
+              <Link to="/trending" className="hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-widest no-underline" style={{ color: '#C04030' }}>
+                See All Contributions <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="popular-posts-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="popular-posts-grid">
               {popularPosts.map((post, i) => <BlogCard key={post.id} post={post} index={i} />)}
+            </div>
+            <div className="flex justify-center mt-10 sm:hidden">
+              <Link to="/trending" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest no-underline" style={{ color: '#C04030' }}>
+                See All Contributions <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </section>

@@ -434,3 +434,70 @@ h6 {
 .font-mono-tech {
   font-family: 'JetBrains Mono', monospace;
 }
+
+/* ═══════════════════════════════════════════════
+   FLOATING CARD ANIMATIONS — /discussions, /trending, /stats
+   ═══════════════════════════════════════════════ */
+
+/* Float wrapper — position is set per card via inline style */
+.float-card-wrapper {
+  position: relative;
+  will-change: transform;
+}
+
+/* Passive float: slow vertical drift + tiny rotation */
+.float-card-wrapper:nth-child(1)  { animation: floatA 16s ease-in-out infinite; }
+.float-card-wrapper:nth-child(2)  { animation: floatB 19s ease-in-out infinite 1.8s; }
+.float-card-wrapper:nth-child(3)  { animation: floatC 22s ease-in-out infinite 3.4s; }
+.float-card-wrapper:nth-child(4)  { animation: floatD 17s ease-in-out infinite 0.9s; }
+.float-card-wrapper:nth-child(5)  { animation: floatE 20s ease-in-out infinite 2.6s; }
+.float-card-wrapper:nth-child(6)  { animation: floatF 24s ease-in-out infinite 4.1s; }
+.float-card-wrapper:nth-child(7)  { animation: floatA 18s ease-in-out infinite 5.2s; }
+.float-card-wrapper:nth-child(8)  { animation: floatB 21s ease-in-out infinite 1.2s; }
+.float-card-wrapper:nth-child(9)  { animation: floatC 15s ease-in-out infinite 3.8s; }
+.float-card-wrapper:nth-child(10) { animation: floatD 23s ease-in-out infinite 6.0s; }
+.float-card-wrapper:nth-child(11) { animation: floatE 17s ease-in-out infinite 2.1s; }
+.float-card-wrapper:nth-child(12) { animation: floatF 20s ease-in-out infinite 4.7s; }
+
+@keyframes floatA {
+  0%,  100% { transform: translateY(0px)    rotate(-0.8deg); }
+  33%        { transform: translateY(-12px)  rotate(0.2deg);  }
+  66%        { transform: translateY(6px)    rotate(-1.4deg); }
+}
+@keyframes floatB {
+  0%,  100% { transform: translateY(0px)    rotate(0.6deg);  }
+  40%        { transform: translateY(-14px)  rotate(-0.3deg); }
+  70%        { transform: translateY(7px)    rotate(1.1deg);  }
+}
+@keyframes floatC {
+  0%,  100% { transform: translateY(0px)    rotate(-1.2deg); }
+  50%        { transform: translateY(-10px)  rotate(0.4deg);  }
+}
+@keyframes floatD {
+  0%,  100% { transform: translateY(0px)    rotate(1.0deg);  }
+  35%        { transform: translateY(-16px)  rotate(0.1deg);  }
+  65%        { transform: translateY(5px)    rotate(1.6deg);  }
+}
+@keyframes floatE {
+  0%,  100% { transform: translateY(0px)    rotate(-0.5deg); }
+  50%        { transform: translateY(-11px)  rotate(0.7deg);  }
+}
+@keyframes floatF {
+  0%,  100% { transform: translateY(0px)    rotate(0.9deg);  }
+  45%        { transform: translateY(-13px)  rotate(-0.2deg); }
+  80%        { transform: translateY(8px)    rotate(1.3deg);  }
+}
+
+/* Pauses animation on hover so card feels "grabbed" */
+.float-card-wrapper:hover {
+  animation-play-state: paused;
+}
+
+/* Stat tiles for /stats page */
+.stat-tile {
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+.stat-tile:hover {
+  transform: scale(1.04) translateY(-5px);
+  box-shadow: 0 16px 40px rgba(20, 40, 80, 0.18);
+}

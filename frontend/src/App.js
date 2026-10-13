@@ -11,6 +11,9 @@ import CityBackground from './components/CityBackground';
 import HomePage from './pages/HomePage';
 
 const CategoryPage = lazy(() => import('./pages/CategoryPage'));
+const DiscussionsPage = lazy(() => import('./pages/DiscussionsPage'));
+const TrendingPage = lazy(() => import('./pages/TrendingPage'));
+const StatsPage = lazy(() => import('./pages/StatsPage'));
 const PostPage = lazy(() => import('./pages/PostPage'));
 const WritePage = lazy(() => import('./pages/WritePage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
@@ -77,6 +80,9 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/category/:slug" element={<CategoryPage />} />
+                <Route path="/discussions" element={<DiscussionsPage />} />
+                <Route path="/trending" element={<TrendingPage />} />
+                <Route path="/stats" element={<StatsPage />} />
                 <Route path="/topics" element={<TopicsPage />} />
                 <Route path="/regions" element={<RegionsPage />} />
                 <Route path="/careers" element={<CareersPage />} />
