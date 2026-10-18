@@ -1,31 +1,51 @@
 import re
 import uuid
 from datetime import datetime, timezone
+from time import monotonic
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from database import db
 from auth import get_current_user
 from models import CommentCreate
 from email_service import notify_post_author_of_comment
 from websocket_manager import ws_manager
-
+from rate_limit import public_limiter
+ 
 router = APIRouter()
-
-
+ 
+# One "new comment" email per post every 10 minutes, so a comment flood
+# can't flood the author's inbox.
+NOTIFY_COOLDOWN_SECONDS = 600
+MAX_MENTIONS_PER_COMMENT = 10
+_last_notified = {}
+ 
+ 
+def _should_notify(post_id: str) -> bool:
+    now = monotonic()
+    if len(_last_notified) > 5000:
+        _last_notified.clear()
+    last = _last_notified.get(post_id)
+    if last is not None and now - last < NOTIFY_COOLDOWN_SECONDS:
+        return False
+    _last_notified[post_id] = now
+    return True
+ 
+ 
 def public_author_name(user):
     return (user.get("published_name") or user.get("name") or "").strip()
-
-
+ 
+ 
 @router.get("/users/search")
-async def search_users(q: str, post_id: Optional[str] = None, limit: int = 8):
+async def search_users(request: Request, q: str, post_id: Optional[str] = None, limit: int = 8):
     """Search users by name for @mention autocomplete. Also includes post author & commenters."""
+    public_limiter.check(request, "user-search", maximum=60, window_seconds=60)
     if not q or len(q.strip()) < 1:
         return []
     q = q.strip()[:80]
     limit = max(1, min(limit, 20))
     results = []
     seen_ids = set()
-
+ 
     # If post_id provided, include the post author + active commenters first
     if post_id:
         post = await db.posts.find_one({"id": post_id}, {"_id": 0, "author_name": 1, "author_id": 1, "author_city": 1})
@@ -39,13 +59,13 @@ async def search_users(q: str, post_id: Optional[str] = None, limit: int = 8):
         comments = await db.comments.find({"post_id": post_id, "author_id": {"$ne": None}}, {"_id": 0, "author_id": 1, "author_name": 1}).to_list(100)
         for c in comments:
             if c.get("author_id") and c["author_id"] not in seen_ids and c.get("author_name", "").lower().startswith(q.lower()):
-                user_doc = await db.users.find_one({"id": c["author_id"]}, {"_id": 0, "id": 1, "name": 1, "city": 1})
+                user_doc = await db.users.find_one({"id": c["author_id"]}, {"_id": 0, "id": 1, "name": 1, "published_name": 1, "city": 1})
                 if user_doc:
-                    results.append({"id": user_doc["id"], "name": user_doc["name"], "city": user_doc.get("city", "")})
+                    results.append({"id": user_doc["id"], "name": public_author_name(user_doc), "city": user_doc.get("city", "")})
                     seen_ids.add(user_doc["id"])
             if len(results) >= limit:
                 break
-
+ 
     # General user search by name prefix
     if len(results) < limit:
         remaining = limit - len(results)
@@ -62,28 +82,29 @@ async def search_users(q: str, post_id: Optional[str] = None, limit: int = 8):
                 seen_ids.add(u["id"])
             if len(results) >= limit:
                 break
-
+ 
     return results
-
-
+ 
+ 
 @router.get("/posts/{post_id}/comments")
 async def get_comments(post_id: str):
     comments = await db.comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", 1).to_list(1000)
     return comments
-
-
+ 
+ 
 @router.post("/posts/{post_id}/comments")
-async def create_comment(post_id: str, comment: CommentCreate, user=Depends(get_current_user)):
+async def create_comment(post_id: str, comment: CommentCreate, request: Request, user=Depends(get_current_user)):
+    public_limiter.check(request, "comment", maximum=10, window_seconds=60)
     post = await db.posts.find_one({"id": post_id}, {"_id": 0})
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if user and user.get("is_suspended"):
         raise HTTPException(status_code=403, detail="This account has been suspended.")
-
+ 
     # Extract @mentions from content
     mentions = re.findall(r'@(\w[\w\s]*?)(?=\s@|\s|$|[.,!?])', comment.content)
     mentioned_user_ids = []
-    for mention_name in mentions:
+    for mention_name in mentions[:MAX_MENTIONS_PER_COMMENT]:
         mentioned_user = await db.users.find_one({"name": {"$regex": f"^{re.escape(mention_name.strip())}$", "$options": "i"}}, {"_id": 0, "id": 1, "name": 1})
         if mentioned_user:
             mentioned_user_ids.append(mentioned_user["id"])
@@ -91,13 +112,13 @@ async def create_comment(post_id: str, comment: CommentCreate, user=Depends(get_
     author_name = comment.author_name or (public_author_name(user) if user else None)
     author_city = comment.author_city or (user["city"] if user else "")
     author_country = comment.author_country or (user["country"] if user else "")
-
+ 
     if not author_name:
         raise HTTPException(status_code=400, detail="Comment author name is required")
-
+ 
     if not user and not author_city:
         raise HTTPException(status_code=400, detail="Guest comments require city")
-
+ 
     comment_doc = {
         "id": str(uuid.uuid4()),
         "post_id": post_id,
@@ -121,14 +142,16 @@ async def create_comment(post_id: str, comment: CommentCreate, user=Depends(get_
     # Real-time broadcast
     safe_comment = {k: v for k, v in comment_doc.items() if k != "_id"}
     await ws_manager.broadcast(post_id, {"type": "new_comment", "comment": safe_comment})
-    # Email notification to post author
-    try:
-        await notify_post_author_of_comment(post, comment_doc)
-    except Exception:
-        pass
+    # Email notification to post author (skip self-comments, throttle per post)
+    is_self_comment = bool(user) and user["id"] == post.get("author_id")
+    if not is_self_comment and _should_notify(post_id):
+        try:
+            await notify_post_author_of_comment(post, comment_doc)
+        except Exception:
+            pass
     return safe_comment
-
-
+ 
+ 
 @router.get("/posts/{post_id}/comments/live")
 async def get_comments_live(post_id: str):
     comments = await db.comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", -1).limit(50).to_list(50)
