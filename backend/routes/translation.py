@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import json
 import os
@@ -5,10 +6,11 @@ import urllib.parse
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from database import db
 from models import TranslationRequest
-
+from rate_limit import public_limiter
+ 
 router = APIRouter()
 
 
@@ -25,10 +27,11 @@ async def _translate_text(text: str, target_language: str, source_language: str)
     key = _cache_key(text, target_language, source)
     cached = await db.translation_cache.find_one({"key": key}, {"_id": 0})
     if cached:
-        return cached["translated_text"]
-
-    translated = _call_translation_provider(text, target_language, source)
-
+               return cached["translated_text"]
+ 
+    # The provider call is blocking urllib; run it off the event loop.
+    translated = await asyncio.to_thread(_call_translation_provider, text, target_language, source)
+ 
     await db.translation_cache.update_one(
         {"key": key},
         {"$set": {
@@ -130,8 +133,9 @@ def _post_json_for_translation(url: str, payload: dict, response_field: str) -> 
     return translated
 
 
-@router.post("/translate/post")
-async def translate_post(req: TranslationRequest):
+    @router.post("/translate/post")
+async def translate_post(req: TranslationRequest, request: Request):
+    public_limiter.check(request, "translate", maximum=20, window_seconds=60)
     source_language = req.source_language or "auto"
     if source_language == req.target_language:
         return {
