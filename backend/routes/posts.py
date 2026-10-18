@@ -3,11 +3,15 @@ import re
 import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from database import db
 from auth import get_current_user, require_user
 from models import PostCreate, PostUpdate
 from email_service import notify_new_post_to_all_users
+from rate_limit import public_limiter
+ 
+router = APIRouter()
+
 
 router = APIRouter()
 
