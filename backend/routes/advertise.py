@@ -1,14 +1,15 @@
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from database import db
 from models import AdInquiry
-
+from rate_limit import public_limiter
+ 
 router = APIRouter()
 
-
 @router.post("/advertise/inquiry")
-async def submit_ad_inquiry(inquiry: AdInquiry):
+async def submit_ad_inquiry(inquiry: AdInquiry, request: Request):
+    public_limiter.check(request, "ad-inquiry", maximum=5, window_seconds=3600)
     doc = {
         "id": str(uuid.uuid4()),
         "company_name": inquiry.company_name,
