@@ -1,9 +1,10 @@
 import os
+import re
 import uuid
 import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
@@ -53,6 +54,18 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+ 
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if request.url.path.startswith("/api/uploads/"):
+        # Uploaded files are only ever images - never let a browser run them as a page.
+        response.headers["Content-Security-Policy"] = "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox"
+    return response
 
 # ==================== MOUNT ROUTERS ====================
 # All routers are prefixed with /api via the include
@@ -84,13 +97,29 @@ app.mount("/api/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads
 
 # ==================== WEBSOCKET ====================
 
+POST_ID_RE = re.compile(r"^[0-9a-fA-F-]{36}$")
+MAX_WS_CONNECTIONS_PER_POST = 100
+MAX_WS_CONNECTIONS_TOTAL = 2000
+ 
+ 
 @app.websocket("/api/ws/comments/{post_id}")
 async def websocket_comments(websocket: WebSocket, post_id: str):
+    total = sum(len(conns) for conns in ws_manager.active_connections.values())
+    if (
+        not POST_ID_RE.match(post_id)
+        or len(ws_manager.active_connections.get(post_id, [])) >= MAX_WS_CONNECTIONS_PER_POST
+        or total >= MAX_WS_CONNECTIONS_TOTAL
+    ):
+        await websocket.close(code=1008)
+        return
     await ws_manager.connect(websocket, post_id)
     try:
         while True:
-            data = await websocket.receive_text()
+            await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    finally:
+        # Always clean up, even on unexpected errors.
         ws_manager.disconnect(websocket, post_id)
 
 # ==================== STARTUP / SHUTDOWN ====================
