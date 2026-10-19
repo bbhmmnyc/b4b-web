@@ -1,10 +1,11 @@
+import hmac
 import os
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from database import db
 from auth import require_user, require_admin
-from models import AdminSetupRequest, DigestSendRequest
-
+from models import AdminSetupRequest, DigestSendRequest, SponsorUpdate
+ 
 router = APIRouter()
 
 
@@ -20,7 +21,7 @@ async def self_promote_to_admin(req: AdminSetupRequest, user=Depends(require_use
             detail="Admin setup is already complete. Use the admin dashboard to manage admins.",
         )
 
-    if req.secret_key != admin_key:
+    if not hmac.compare_digest(req.secret_key.encode("utf-8"), admin_key.encode("utf-8")):
         raise HTTPException(status_code=403, detail="Invalid admin setup key")
     await db.users.update_one(
         {"id": user["id"]},
@@ -333,18 +334,20 @@ async def set_user_suspension(user_id: str, body: dict, admin=Depends(require_ad
 
 
 @router.put("/admin/posts/{post_id}/sponsor")
-async def set_sponsor(post_id: str, sponsor: dict, user=Depends(require_admin)):
+async def set_sponsor(post_id: str, sponsor: SponsorUpdate, user=Depends(require_admin)):
     post = await db.posts.find_one({"id": post_id}, {"_id": 0})
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if sponsor.get("remove"):
+    if sponsor.remove:
         await db.posts.update_one({"id": post_id}, {"$set": {"is_sponsored": False}, "$unset": {"sponsor_name": "", "sponsor_url": "", "sponsor_logo": ""}})
         return {"is_sponsored": False, "message": "Sponsorship removed"}
+    if not sponsor.sponsor_name:
+        raise HTTPException(status_code=422, detail="Sponsor name is required")
     await db.posts.update_one({"id": post_id}, {"$set": {
         "is_sponsored": True,
-        "sponsor_name": sponsor.get("sponsor_name", ""),
-        "sponsor_url": sponsor.get("sponsor_url", ""),
-        "sponsor_logo": sponsor.get("sponsor_logo", ""),
+        "sponsor_name": sponsor.sponsor_name,
+        "sponsor_url": sponsor.sponsor_url or "",
+        "sponsor_logo": sponsor.sponsor_logo or "",
     }})
     return {"is_sponsored": True, "message": "Sponsor info updated"}
 
