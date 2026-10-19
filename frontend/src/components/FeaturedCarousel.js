@@ -3,7 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Star, ExternalLink, MapPin, Heart, Eye } from 'lucide-react';
 import { getCategoryColor } from '../utils/colors';
-
+import { safeExternalUrl } from '@/lib/utils';
+ 
 export default function FeaturedCarousel({ posts }) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -132,11 +133,12 @@ export default function FeaturedCarousel({ posts }) {
             {post.is_sponsored && post.sponsor_name && (
               <div className="mt-4 flex items-center gap-2 text-xs text-brand-grey" data-testid="sponsor-info">
                 <span className="font-medium">Presented by</span>
-                {post.sponsor_url ? (
+                {safeExternalUrl(post.sponsor_url) ? (
                   <a
-                    href={post.sponsor_url}
+                    href={safeExternalUrl(post.sponsor_url)}
                     target="_blank"
                     rel="noopener noreferrer"
+
                     className="font-bold text-[#C4942A] hover:underline flex items-center gap-1"
                   >
                     {post.sponsor_name} <ExternalLink className="w-3 h-3" />
