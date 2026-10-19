@@ -1,16 +1,16 @@
 import { BACKEND_URL } from '@/config';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import DOMPurify from 'dompurify';
-import { useApp } from '../context/AppContext';
-import CommentSection from '../components/CommentSection';
 import { ArrowLeft, Heart, Eye, MapPin, Clock, Tag, Timer, Pencil, Trash2, Facebook, Twitter, Linkedin, Link2, Languages } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import BlogCard from '../components/BlogCard';
 import { toast } from 'sonner';
-
+import axios from 'axios';
+import DOMPurify from 'dompurify';
+import { safeExternalUrl } from '@/lib/utils';
+import { useApp } from '../context/AppContext';
+import CommentSection from '../components/CommentSection';
 export default function PostPage() {
   const { id } = useParams();
   const { API, token, user, language, t } = useApp();
@@ -258,10 +258,10 @@ export default function PostPage() {
 
         {/* Sponsor branding bar */}
         {post.is_sponsored && post.sponsor_name && (
-          <div className="flex items-center gap-3 mb-6 p-4 border border-[#C4942A]/20" style={{ background: 'linear-gradient(135deg, #FFF8E1 0%, #FDFCF8 100%)' }} data-testid="post-sponsor-bar">
-            <span className="text-xs text-brand-grey font-medium">{t('presentedBy')}</span>
-            {post.sponsor_url ? (
-              <a href={post.sponsor_url} target="_blank" rel="noopener noreferrer" className="font-bold text-sm text-[#C4942A] hover:underline no-underline">
+         <div className="flex items-center gap-3 mb-6 p-4 border border-[#C4942A]/20" style={{ background: 'linear-gradient(135deg, #FFF8E1 0%, #FDFCF8 100%)' }} data-testid="post-sponsor-bar">
+           <span className="text-xs text-brand-grey font-medium">{t('presentedBy')}</span>
+           {safeExternalUrl(post.sponsor_url) ? (
+             <a href={safeExternalUrl(post.sponsor_url)} target="_blank" rel="noopener noreferrer" className="font-bold text-sm text-[#C4942A] hover:underline no-underline">
                 {post.sponsor_name}
               </a>
             ) : (
