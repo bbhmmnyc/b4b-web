@@ -8,9 +8,11 @@ from urllib.parse import urlparse
 import stripe
 from database import db
 from auth import require_admin
-from models import DonationCheckoutRequest
-
+from models import DonationCheckoutRequest, AdBookingRequest
+from rate_limit import public_limiter
+ 
 router = APIRouter()
+
 
 # ──────────────────────────────────────────
 # Rate Card — prices defined server-side only
@@ -33,18 +35,7 @@ PLACEMENT_MULTIPLIERS = {
     "top-tier": 1.5,
 }
 
-
-class AdBookingRequest(BaseModel):
-    ad_size: str
-    frequency: str
-    placement: str
-    advertiser: str
-    contact_name: str
-    email: str
-    phone: Optional[str] = None
-    campaign_name: Optional[str] = None
-    origin_url: str
-
+   
 
 @router.get("/payments/rate-card")
 async def get_rate_card():
@@ -205,7 +196,8 @@ async def get_donation_status():
 
 
 @router.post("/payments/donations/checkout")
-async def create_donation_checkout(req: DonationCheckoutRequest):
+async def create_donation_checkout(req: DonationCheckoutRequest, http_request: Request):
+    public_limiter.check(http_request, "donation-checkout", maximum=10, window_seconds=3600)
     api_key = os.environ.get("STRIPE_API_KEY")
     if not api_key:
         raise HTTPException(status_code=503, detail="Donations are not available until payment keys are configured")
@@ -367,9 +359,13 @@ async def check_payment_status(session_id: str, http_request: Request):
         "payment_status": status.payment_status,
         "amount_total": status.amount_total,
         "currency": status.currency,
-        "metadata": dict(status.metadata or {}),
+        # Only the fields the success page reads - no emails or names.
+        "metadata": {
+            key: (status.metadata or {}).get(key)
+            for key in ("type", "booking_id", "donation_id")
+            if (status.metadata or {}).get(key)
+        },
     }
-
 
 @router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
