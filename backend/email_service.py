@@ -15,7 +15,7 @@ BREVO_API_KEY = os.environ.get('BREVO_API_KEY')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
 
 
-def _send_email_notification_sync(to_email: str, subject: str, html_content: str):
+def _send_email_notification_sync(to_email: str, subject: str, html_content: str, headers: dict | None = None):
     """Send an email notification using Brevo when configured, otherwise Resend."""
     if BREVO_API_KEY:
         payload = {
@@ -47,20 +47,23 @@ def _send_email_notification_sync(to_email: str, subject: str, html_content: str
         return
     try:
         resend.api_key = RESEND_API_KEY
-        resend.Emails.send({
+        message = {
             "from": f"Blogs 4 Blocks <{SENDER_EMAIL}>",
             "to": [to_email],
             "subject": subject,
-            "html": html_content
-        })
+            "html": html_content,
+        }
+        if headers:
+            message["headers"] = headers
+        resend.Emails.send(message)
         logger.info(f"Email sent to {to_email}: {subject}")
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {e}")
 
 
-async def send_email_notification(to_email: str, subject: str, html_content: str):
+async def send_email_notification(to_email: str, subject: str, html_content: str, headers: dict | None = None):
     """Run synchronous provider SDKs outside FastAPI's event loop."""
-    await asyncio.to_thread(_send_email_notification_sync, to_email, subject, html_content)
+    await asyncio.to_thread(_send_email_notification_sync, to_email, subject, html_content, headers)
 
 
 async def notify_post_author_of_comment(post, comment_doc):
