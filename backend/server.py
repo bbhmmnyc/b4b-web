@@ -215,3 +215,8 @@ async def shutdown_db_client():
     if scheduler:
         scheduler.shutdown(wait=False)
     client.close()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("server:app", host="127.0.0.1", port=8001, workers=1)
