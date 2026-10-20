@@ -131,9 +131,8 @@ def _post_json_for_translation(url: str, payload: dict, response_field: str) -> 
     if translated is None:
         raise HTTPException(status_code=502, detail="Translation provider returned no translation")
     return translated
-
-
-    @router.post("/translate/post")
+ 
+@router.post("/translate/post")
 async def translate_post(req: TranslationRequest, request: Request):
     public_limiter.check(request, "translate", maximum=20, window_seconds=60)
     source_language = req.source_language or "auto"
