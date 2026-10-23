@@ -4,6 +4,11 @@ from database import db
 from auth import require_user
 from models import ProfileColors
 
+from fastapi import APIRouter, HTTPException, Depends 
+from database import db
+from auth import get_current_user
+from models import EmailPrefsUpdate
+
 router = APIRouter()
 
 
@@ -44,3 +49,35 @@ async def update_profile_colors(colors: ProfileColors, user=Depends(require_user
         upsert=True
     )
     return {"message": "Colors updated", "my_posts_color": colors.my_posts_color, "interacted_color": colors.interacted_color}
+
+
+@router.get("/profile/email-prefs")
+async def get_email_prefs(user=Depends(get_current_user)): 
+    """Return the current user's email preferences."""
+    prefs = await db.user_prefs.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not prefs:
+        # Default: new post emails ON (existing behavior), digest ON return {"email_new_posts": True, 
+        "email_digest": True}
+    return {
+        "email_new_posts": prefs.get("email_new_posts", True),
+        "email_digest": prefs.get("email_digest", True)
+    }
+
+
+@router.put("/profile/email-prefs")
+async def update_email_prefs(prefs: EmailPrefsUpdate, user=Depends(get_current_user)):
+    """Update email preferences. Existing users keep current defaults unless changed."""
+    await db.user_prefs.update_one( 
+        {"user_id": user["id"]}, 
+        {"$set": {
+            "user_id": user["id"],
+            "email_new_posts": prefs.email_new_posts,
+            "email_digest": prefs.email_digest, 
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    ) return {"email_new_posts": prefs.email_new_posts, "email_digest": prefs.email_digest}
+
+
+
+
