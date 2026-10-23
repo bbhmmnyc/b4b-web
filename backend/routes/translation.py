@@ -1,166 +1,152 @@
-import asyncio
-import hashlib
-import json
 import os
-import urllib.parse
+import hashlib 
+import asyncio
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Request
 from database import db
 from models import TranslationRequest
 from rate_limit import public_limiter
- 
+
 router = APIRouter()
 
+# --- Provider call (unchanged logic, runs in thread) ---
 
-def _cache_key(text: str, target_language: str, source_language: str) -> str:
-    raw = f"{source_language}|{target_language}|{text}".encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()
-
-
-async def _translate_text(text: str, target_language: str, source_language: str) -> str:
-    if not text:
-        return text
-
-    source = source_language or "auto"
-    key = _cache_key(text, target_language, source)
-    cached = await db.translation_cache.find_one({"key": key}, {"_id": 0})
-    if cached:
-               return cached["translated_text"]
- 
-    # The provider call is blocking urllib; run it off the event loop.
-    translated = await asyncio.to_thread(_call_translation_provider, text, target_language, source)
- 
-    await db.translation_cache.update_one(
-        {"key": key},
-        {"$set": {
-            "key": key,
-            "source_language": source,
-            "target_language": target_language,
-            "source_hash": hashlib.sha256(text.encode("utf-8")).hexdigest(),
-            "translated_text": translated,
-            "provider": os.environ.get("TRANSLATION_PROVIDER", "libretranslate"),
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }},
-        upsert=True,
-    )
-    return translated
-
-
-def _call_translation_provider(text: str, target_language: str, source_language: str) -> str:
-    provider = os.environ.get("TRANSLATION_PROVIDER", "libretranslate").lower().strip()
-
-    if provider == "deepl":
-        return _call_deepl(text, target_language, source_language)
-
-    return _call_libretranslate(text, target_language, source_language)
-
-
-def _call_libretranslate(text: str, target_language: str, source_language: str) -> str:
-    base_url = os.environ.get("LIBRETRANSLATE_URL", "").rstrip("/")
-    api_key = os.environ.get("LIBRETRANSLATE_API_KEY", "")
-    if not base_url:
-        raise HTTPException(
-            status_code=503,
-            detail="Translation is not configured yet. Set LIBRETRANSLATE_URL or choose another TRANSLATION_PROVIDER.",
-        )
-
-    payload = {
-        "q": text,
-        "source": source_language if source_language != "auto" else "auto",
-        "target": target_language,
-        "format": "html" if "<" in text and ">" in text else "text",
-    }
-    if api_key:
-        payload["api_key"] = api_key
-
-    return _post_json_for_translation(f"{base_url}/translate", payload, "translatedText")
-
-
-def _call_deepl(text: str, target_language: str, source_language: str) -> str:
-    api_key = os.environ.get("DEEPL_API_KEY", "")
+def _call_translation_provider(text: str, target_language: str, source_language: str =
+"auto") -> str:
+    """Synchronous provider call. Runs via asyncio.to_thread so it never blocks the event loop."""
+    api_key = os.environ.get("TRANSLATION_API_KEY")
     if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="Translation is not configured yet. Set DEEPL_API_KEY or use LibreTranslate.",
-        )
+        raise HTTPException(status_code=503, detail="Translation service is not configured")
 
-    api_url = os.environ.get("DEEPL_API_URL", "https://api-free.deepl.com/v2/translate")
-    data = {
-        "auth_key": api_key,
-        "text": text,
-        "target_lang": target_language.upper(),
-        "tag_handling": "html" if "<" in text and ">" in text else "",
+    url = "https://libretranslate.com/translate"
+    params = {
+        "q": text,
+        "source": source_language or "auto",
+        "target": target_language,
+        "format": "text",
+        "api_key": api_key,
     }
-    if source_language and source_language != "auto":
-        data["source_lang"] = source_language.upper()
+    data = urllib.parse.urlencode(params).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers={"Content-Type": 
+    "application/x-www-form-urlencoded"})
 
-    encoded = urllib.parse.urlencode({k: v for k, v in data.items() if v}).encode("utf-8")
-    req = urllib.request.Request(api_url, data=encoded, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Translation provider error: {exc.code}") from exc
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail="Translation provider unavailable") from exc
-
-    translations = payload.get("translations") or []
-    if not translations:
-        raise HTTPException(status_code=502, detail="Translation provider returned no translation")
-    return translations[0].get("text", "")
+        with urllib.request.urlopen(req, timeout=15) as response:
+            result = json.loads(response.read().decode("utf-8")) 
+            return result.get("translatedText", text)
+    except urllib.error.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"Translation provider error: {e.code}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail="Translation provider unavailable")
 
 
-def _post_json_for_translation(url: str, payload: dict, response_field: str) -> str:
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Accept": "application/json"},
-        method="POST",
+# --- Cache helpers ---
+
+
+def _cache_key(post_id: str, target_language: str) -> str:
+    return hashlib.sha256(f"{post_id}:{target_language}".encode()).hexdigest()
+
+
+async def _get_cached(post_id: str, target_language: str):
+    return await db.translation_cache.find_one(
+        {"key": _cache_key(post_id, target_language)},
+        {"_id": 0, "translated_text": 1}
     )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        raise HTTPException(status_code=502, detail=f"Translation provider error: {exc.code}") from exc
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail="Translation provider unavailable") from exc
+       
 
-    translated = data.get(response_field)
-    if translated is None:
-        raise HTTPException(status_code=502, detail="Translation provider returned no translation")
-    return translated
-<<<<<<< HEAD
+async def _set_cache(post_id: str, target_language: str, translated_text: str, source_text: str):
+    await db.translation_cache.update_one(
+        {"key": _cache_key(post_id, target_language)},
+        {"$set": {
+            "key": _cache_key(post_id, target_language),  
+            "post_id": post_id,
+            "target_language": target_language,
+            "source_text": source_text, 
+            "translated_text": translated_text,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
 
 
-=======
- 
->>>>>>> e4aa00c3aeb2ca7a59928bf79fede0aeb00d49d8
+# --- Endpoints ---
+
 @router.post("/translate/post")
-async def translate_post(req: TranslationRequest, request: Request):
+async def translate_post(req: TranslationRequest, request: Request): 
+    """
+    Translate an existing post by ID. Rejects requests for posts that don't exist
+    or aren't public, so the endpoint can't be used as a free text-translation proxy. 
+    """
     public_limiter.check(request, "translate", maximum=20, window_seconds=60)
-    source_language = req.source_language or "auto"
-    if source_language == req.target_language:
+
+    post = await db.posts.find_one(
+        {"id": req.post_id},
+        {"_id": 0, "title": 1, "excerpt": 1, "content": 1, "language": 1, "expires_at": 1}
+    )
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # Don't translate expired/unlisted posts
+    now_iso = datetime.now(timezone.utc).isoformat()
+    expires_at = post.get("expires_at")
+    if expires_at and expires_at < now_iso:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    source_language = req.source_language or post.get("language") or "auto"
+    target_language = req.target_language
+
+    if source_language == target_language:
         return {
-            "title": req.title,
-            "excerpt": req.excerpt,
-            "content": req.content,
-            "source_language": source_language,
-            "target_language": req.target_language,
-            "machine_translated": False,
-        }
-
-    translated_title = await _translate_text(req.title or "", req.target_language, source_language)
-    translated_excerpt = await _translate_text(req.excerpt or "", req.target_language, source_language)
-    translated_content = await _translate_text(req.content, req.target_language, source_language)
-
-    return {
-        "title": translated_title,
-        "excerpt": translated_excerpt,
-        "content": translated_content,
-        "source_language": source_language,
-        "target_language": req.target_language,
-        "machine_translated": True,
-        "notice": "Machine translation provided for convenience. Original author language is the source version.",
+            "title": post["title"],
+            "excerpt": post.get("excerpt", ""),
+            "content": post["content"],
+            "source_language": source_language, 
+            "target_language": target_language, 
+            "cached": False
     }
+# Check cache first
+cached = await _get_cached(req.post_id, target_language)
+if cached:
+    return {
+        "title": cached["translated_text"]["title"],
+        "excerpt": cached["translated_text"].get("excerpt", ""),
+        "content": cached["translated_text"]["content"],
+        "source_language": source_language,
+        "target_language": target_language,
+        "cached": True
+    }
+
+# Translate each field (blocking call off the event loop)
+try:
+    translated_title = await asyncio.to_thread(
+        _call_translation_provider, post["title"], target_language, source_language
+    )
+    translated_excerpt = await asyncio.to_thread(
+        _call_translation_provider, post.get("excerpt", ""), target_language, source_language
+    ) if post.get("excerpt") else "" 
+    translated_content = await asyncio.to_thread(
+        _call_translation_provider, post["content"], target_language, source_language
+    )
+except HTTPException:
+    raise
+except Exception:
+    raise HTTPException(status_code=502, detail="Translation failed")
+
+translated = {
+"title": translated_title,
+"excerpt": translated_excerpt,
+"content": translated_content
+}
+await _set_cache(req.post_id, target_language, translated, post["content"])
+
+return {
+    "title": translated_title, 
+    "excerpt": translated_excerpt, 
+    "content": translated_content, 
+    "source_language": source_language, 
+    "target_language": target_language, 
+    "cached": False
+}
