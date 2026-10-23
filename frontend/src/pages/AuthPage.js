@@ -94,7 +94,6 @@ export default function AuthPage() {
                     id="login-email"
                     type="email"
                     autoComplete="username"
-                    autoFocus
                     placeholder="you@example.com"
                     value={loginForm.email}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}

@@ -5,6 +5,8 @@ import { useApp } from '../context/AppContext';
 import { Send, MapPin, Clock, Wifi, WifiOff, AtSign } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { getLanguage } from '../i18n';
+import { toast } from 'sonner';
 
 function getWsUrl() {
   const backendUrl =
@@ -14,7 +16,8 @@ function getWsUrl() {
 }
 
 export default function CommentSection({ postId }) {
-  const { user, token, API } = useApp();
+  const { user, token, API, language } = useApp();
+  const locale = getLanguage(language).locale;
   const [comments, setComments] = useState([]);
   const [content, setContent] = useState('');
   const [guestName, setGuestName] = useState('');
@@ -70,7 +73,7 @@ export default function CommentSection({ postId }) {
                 return [data.comment, ...prev];
               });
             }
-          } catch (e) {}
+          } catch {}
         };
         ws.onclose = () => {
           setWsConnected(false);
@@ -196,7 +199,7 @@ export default function CommentSection({ postId }) {
     setGuestName('');
     setGuestCity('');
     setGuestCountry('');
-    onCommentPosted();
+    await fetchComments();
   } catch {
     toast.error('Failed to post comment');
   }
@@ -314,14 +317,14 @@ export default function CommentSection({ postId }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                  <span className="text-sm font-semibold text-[#1A1A1A]">{comment.author_name}</span>
-                  <span className="flex items-center gap-1 text-xs text-brand-grey">
+                  <span className="text-sm font-semibold text-[#1A1A1A]" translate="no">{comment.author_name}</span>
+                  <span className="flex items-center gap-1 text-xs text-brand-grey" translate="no">
                     <MapPin className="w-3 h-3" />
                     {comment.author_city}, {comment.author_country}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-brand-grey">
+                  <span className="flex items-center gap-1 text-xs text-brand-grey" data-no-site-translate>
                     <Clock className="w-3 h-3" />
-                    {new Date(comment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {new Date(comment.created_at).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
                   </span>
                   {comment.is_guest && (
                     <span className="text-[10px] font-bold uppercase tracking-widest text-brand-grey border border-[#E5E5E5] px-2 py-0.5">guest</span>

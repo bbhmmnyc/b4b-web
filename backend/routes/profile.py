@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from database import db
 from auth import require_user
-from models import ProfileColors
+from models import EmailPrefsUpdate, ProfileColors
 
 router = APIRouter()
 
@@ -44,3 +44,40 @@ async def update_profile_colors(colors: ProfileColors, user=Depends(require_user
         upsert=True
     )
     return {"message": "Colors updated", "my_posts_color": colors.my_posts_color, "interacted_color": colors.interacted_color}
+
+
+@router.get("/profile/email-prefs")
+async def get_email_prefs(user=Depends(require_user)):
+    prefs = await db.user_prefs.find_one({"user_id": user["id"]}, {"_id": 0})
+    return {
+        "email_new_posts": prefs.get("email_new_posts", True) if prefs else True,
+        "email_digest": prefs.get("email_digest", True) if prefs else True,
+    }
+
+
+@router.put("/profile/email-prefs")
+async def update_email_prefs(prefs: EmailPrefsUpdate, user=Depends(require_user)):
+    existing = await db.user_prefs.find_one({"user_id": user["id"]}, {"_id": 0}) or {}
+    email_new_posts = (
+        prefs.email_new_posts
+        if prefs.email_new_posts is not None
+        else existing.get("email_new_posts", True)
+    )
+    email_digest = (
+        prefs.email_digest
+        if prefs.email_digest is not None
+        else existing.get("email_digest", True)
+    )
+    await db.user_prefs.update_one(
+        {"user_id": user["id"]},
+        {
+            "$set": {
+                "user_id": user["id"],
+                "email_new_posts": email_new_posts,
+                "email_digest": email_digest,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
+        upsert=True,
+    )
+    return {"email_new_posts": email_new_posts, "email_digest": email_digest}

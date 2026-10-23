@@ -66,6 +66,7 @@ async def register(user: UserCreate, request: Request):
         raise HTTPException(status_code=400, detail="Email already registered")
     name, first_name, last_name = _full_name(user)
     published_name = _clean_optional(user.published_name)
+    created_at = datetime.now(timezone.utc).isoformat()
     user_doc = {
         "id": str(uuid.uuid4()),
         "name": name,
@@ -80,9 +81,15 @@ async def register(user: UserCreate, request: Request):
         "is_approved": False,
         "is_suspended": False,
         "email_verified": False,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": created_at
     }
     await db.users.insert_one(user_doc)
+    await db.user_prefs.insert_one({
+        "user_id": user_doc["id"],
+        "email_new_posts": False,
+        "email_digest": True,
+        "updated_at": created_at,
+    })
     try:
         await _send_verification_email(user_doc)
     except Exception:

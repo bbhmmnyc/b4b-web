@@ -855,8 +855,9 @@ export default function AdminPage() {
               />
               <div className="border border-[#F4F4F5]">
                 {allPosts.filter(p => !p.title?.startsWith('TEST')).slice(0, 20).map(post => (
-                  <label key={post.id} className="flex items-start gap-3 px-4 py-3 border-b border-[#F4F4F5] last:border-0 hover:bg-[#FDFCF8] cursor-pointer">
+                  <label htmlFor={`digest-post-${post.id}`} key={post.id} className="flex items-start gap-3 px-4 py-3 border-b border-[#F4F4F5] last:border-0 hover:bg-[#FDFCF8] cursor-pointer">
                     <input
+                      id={`digest-post-${post.id}`}
                       type="checkbox"
                       checked={selectedDigestPosts.includes(post.id)}
                       onChange={() => toggleDigestPost(post.id)}

@@ -1,8 +1,22 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List
 from urllib.parse import urlparse
- 
- 
+
+
+SUPPORTED_TRANSLATION_LANGUAGES = frozenset({"en", "es", "fr", "pt", "de", "hi", "ar", "zh", "ja"})
+
+
+def _validate_translation_language(value: Optional[str], allow_auto: bool = False) -> Optional[str]:
+    if value is None:
+        return None
+    normalized = value.strip().lower()
+    if allow_auto and normalized == "auto":
+        return normalized
+    if normalized not in SUPPORTED_TRANSLATION_LANGUAGES:
+        raise ValueError("unsupported translation language")
+    return normalized
+
+
 def _validate_http_url(value: Optional[str]) -> Optional[str]:
     if value is None or not value.strip():
         return None
@@ -108,11 +122,44 @@ class PostUpdate(BaseModel):
         return value
  
 class TranslationRequest(BaseModel):
-    title: Optional[str] = Field(default=None, max_length=1000)
-    excerpt: Optional[str] = Field(default=None, max_length=2000)
-    content: str = Field(..., min_length=1, max_length=60000)
+    post_id: str = Field(..., min_length=1, max_length=100)
     target_language: str = Field(..., min_length=2, max_length=12)
     source_language: Optional[str] = Field(default="auto", max_length=12)
+
+    @field_validator("target_language")
+    @classmethod
+    def validate_target_language(cls, value):
+        return _validate_translation_language(value)
+
+    @field_validator("source_language")
+    @classmethod
+    def validate_source_language(cls, value):
+        return _validate_translation_language(value, allow_auto=True)
+
+
+class UiTranslationRequest(BaseModel):
+    texts: List[str] = Field(..., min_length=1, max_length=50)
+    source_language: str = Field(default="en", min_length=2, max_length=12)
+    target_language: str = Field(..., min_length=2, max_length=12)
+
+    @field_validator("texts")
+    @classmethod
+    def validate_texts(cls, value):
+        if any(len(text) > 1000 for text in value):
+            raise ValueError("each translation text must be 1000 characters or fewer")
+        if sum(len(text) for text in value) > 12000:
+            raise ValueError("translation batch must contain 12000 characters or fewer")
+        return value
+
+    @field_validator("source_language", "target_language")
+    @classmethod
+    def validate_ui_language(cls, value):
+        return _validate_translation_language(value)
+
+
+class EmailPrefsUpdate(BaseModel):
+    email_new_posts: Optional[bool] = None
+    email_digest: Optional[bool] = None
  
 class NewsletterSubscribe(BaseModel):
     email: EmailStr

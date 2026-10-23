@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin-setup
+Disallow: /auth
+Disallow: /profile
+Disallow: /write
+
+Sitemap: https://blogs4blocks.com/sitemap.xml

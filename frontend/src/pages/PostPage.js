@@ -98,9 +98,7 @@ export default function PostPage() {
     setTranslationError('');
     try {
       const res = await axios.post(`${API}/translate/post`, {
-        title: post.title,
-        excerpt: post.excerpt,
-        content: post.content,
+        post_id: post.id,
         source_language: post.language || 'auto',
         target_language: language,
       });

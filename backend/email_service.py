@@ -102,11 +102,21 @@ async def notify_post_author_of_comment(post, comment_doc):
 
 
 async def notify_new_post_to_all_users(post_doc):
-    """Notify all registered users about a new post"""
-    all_users = await db.users.find({}, {"_id": 0, "email": 1, "id": 1}).to_list(1000)
+    """Notify opted-in registered users about a new post."""
+    all_users = await db.users.find(
+        {},
+        {"_id": 0, "email": 1, "id": 1, "name": 1},
+    ).to_list(10000)
+    user_ids = [user.get("id") for user in all_users if user.get("id")]
+    opted_out = await db.user_prefs.find(
+        {"user_id": {"$in": user_ids}, "email_new_posts": False},
+        {"_id": 0, "user_id": 1},
+    ).to_list(10000)
+    opted_out_ids = {pref["user_id"] for pref in opted_out}
     author_id = post_doc.get("author_id")
+
     async def send_to_user(u):
-        if u["id"] == author_id:
+        if not u.get("email") or u.get("id") == author_id or u.get("id") in opted_out_ids:
             return
         safe_title = html.escape(post_doc.get("title", ""))
         safe_excerpt = html.escape(post_doc.get("excerpt", "")[:200])

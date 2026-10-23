@@ -3,13 +3,14 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
-import { Palette, PenLine, MessageCircle, Heart, Eye, MapPin, Clock, ArrowRight, ChevronDown, ChevronUp, Send, X, Wifi, Users, UserPlus, UserCheck, Search } from 'lucide-react';
+import { Palette, PenLine, MessageCircle, Heart, Eye, MapPin, Clock, ArrowRight, ChevronDown, ChevronUp, Send, X, Wifi, Users, UserPlus, UserCheck, Search, Mail } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { toast } from 'sonner';
+import { getLanguage } from '../i18n';
 
 const COLOR_OPTIONS = [
   { label: 'Blue', value: '#3B82F6' },
@@ -67,7 +68,8 @@ function getWsUrl() {
 }
 
 function DiscussionThread({ post, onClose }) {
-  const { user, token, API } = useApp();
+  const { user, token, API, language } = useApp();
+  const locale = getLanguage(language).locale;
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -116,7 +118,7 @@ function DiscussionThread({ post, onClose }) {
               // Auto-scroll to bottom
               setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
             }
-          } catch (e) {}
+          } catch {}
         };
         ws.onclose = () => { setWsConnected(false); clearInterval(pingInterval); setTimeout(connect, 3000); };
         ws.onerror = () => { setWsConnected(false); ws.close(); };
@@ -183,8 +185,8 @@ function DiscussionThread({ post, onClose }) {
                   </div>
                 )}
                 <p className={`text-sm leading-relaxed ${isMe ? 'text-white' : 'text-gray-700'}`}>{c.content}</p>
-                <p className={`text-xs mt-1 ${isMe ? 'text-gray-400' : 'text-gray-400'}`}>
-                  {new Date(c.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                <p className={`text-xs mt-1 ${isMe ? 'text-gray-400' : 'text-gray-400'}`} data-no-site-translate>
+                  {new Date(c.created_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>
@@ -276,6 +278,7 @@ export default function ProfilePage() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [activeSection, setActiveSection] = useState('posts');
+  const [emailPrefs, setEmailPrefs] = useState({ email_new_posts: true, email_digest: true });
 
   // Wait for auth to resolve before redirecting
   useEffect(() => {
@@ -302,13 +305,15 @@ export default function ProfilePage() {
       axios.get(`${API}/profile/colors`, { headers }),
       axios.get(`${API}/partners`, { headers }),
       axios.get(`${API}/partners/requests`, { headers }),
-    ]).then(([postsRes, interactionsRes, colorsRes, partnersRes, requestsRes]) => {
+      axios.get(`${API}/profile/email-prefs`, { headers }),
+    ]).then(([postsRes, interactionsRes, colorsRes, partnersRes, requestsRes, emailPrefsRes]) => {
       setMyPosts(postsRes.data);
       setInteractedPosts(interactionsRes.data);
       setMyPostsColor(colorsRes.data.my_posts_color);
       setInteractedColor(colorsRes.data.interacted_color);
       setPartners(partnersRes.data);
       setPartnerRequests(requestsRes.data);
+      setEmailPrefs(emailPrefsRes.data);
     }).catch(e => console.error(e))
     .finally(() => setLoading(false));
   }, [user, token, API, navigate, authChecked]);
@@ -333,6 +338,22 @@ export default function ProfilePage() {
   const handleInteractedColorChange = (color) => {
     setInteractedColor(color);
     saveColors(myPostsColor, color);
+  };
+
+  const updateEmailPreference = async (field, value) => {
+    const previous = emailPrefs;
+    const next = { ...emailPrefs, [field]: value };
+    setEmailPrefs(next);
+    try {
+      const response = await axios.put(`${API}/profile/email-prefs`, next, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEmailPrefs(response.data);
+      toast.success('Email preferences updated!');
+    } catch (e) {
+      setEmailPrefs(previous);
+      toast.error(e.response?.data?.detail || 'Could not update email preferences');
+    }
   };
 
   const handleSearchUsers = async (q) => {
@@ -431,11 +452,12 @@ export default function ProfilePage() {
           </div>
 
           {/* Section tabs */}
-          <div className="flex gap-2 mt-6" data-testid="profile-tabs">
+          <div className="flex flex-wrap gap-2 mt-6" data-testid="profile-tabs">
             {[
               { id: 'posts', label: 'My Posts', icon: <PenLine className="w-4 h-4" /> },
               { id: 'interactions', label: 'Interactions', icon: <Heart className="w-4 h-4" /> },
               { id: 'partners', label: `Partners${partners.length > 0 ? ` (${partners.length})` : ''}`, icon: <Users className="w-4 h-4" /> },
+              { id: 'email-prefs', label: 'Email Preferences', icon: <Mail className="w-4 h-4" /> },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -499,9 +521,14 @@ export default function ProfilePage() {
           {interactedPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="interacted-posts-grid">
               {interactedPosts.map(post => (
-                <div key={post.id} className="cursor-pointer" onClick={() => setSelectedPost(post)}>
+                <button
+                  type="button"
+                  key={post.id}
+                  className="block w-full cursor-pointer text-left"
+                  onClick={() => setSelectedPost(post)}
+                >
                   <PostCard post={post} color={interactedColor} type="interacted" />
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -513,6 +540,36 @@ export default function ProfilePage() {
               </Button>
             </div>
           )}
+        </section>
+        )}
+
+        {/* Email Preferences Section */}
+        {activeSection === 'email-prefs' && (
+        <section data-testid="email-preferences-section">
+          <div className="max-w-2xl bg-white rounded-none border border-[#E5E5E5] p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Mail className="w-5 h-5 text-[#1A1A1A]" />
+              <h2 className="font-heading font-bold text-xl text-[#1A1A1A]">Email Preferences</h2>
+            </div>
+            <p className="text-sm text-brand-grey mb-6">
+              Choose whether you want new-post notifications. Changes are saved automatically. Weekly digest subscriptions are managed through the newsletter unsubscribe link.
+            </p>
+            <div className="space-y-4">
+              <label htmlFor="email-new-posts" className="flex items-start gap-3 cursor-pointer" data-testid="email-new-posts-preference">
+                <input
+                  id="email-new-posts"
+                  type="checkbox"
+                  checked={emailPrefs.email_new_posts}
+                  onChange={(event) => updateEmailPreference('email_new_posts', event.target.checked)}
+                  className="mt-1 h-4 w-4 accent-[#1A1A1A]"
+                />
+                <span>
+                  <span className="block font-semibold text-[#1A1A1A]">New post notifications</span>
+                  <span className="block text-sm text-brand-grey">Receive an email when a new post is published.</span>
+                </span>
+              </label>
+            </div>
+          </div>
         </section>
         )}
 

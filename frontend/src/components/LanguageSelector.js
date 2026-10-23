@@ -17,6 +17,7 @@ export default function LanguageSelector({ compact = false }) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          translate="no"
           className="system-label inline-flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-widest text-slate-700 hover:text-teal-700 transition-colors"
           data-testid="language-selector"
           aria-label={t('language')}
@@ -25,7 +26,7 @@ export default function LanguageSelector({ compact = false }) {
           {compact ? active.code.toUpperCase() : active.nativeName}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 rounded-lg">
+      <DropdownMenuContent align="end" className="w-48 rounded-lg" translate="no">
         {LANGUAGES.map((lang) => (
           <DropdownMenuItem
             key={lang.code}

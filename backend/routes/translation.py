@@ -2,15 +2,21 @@ import asyncio
 import hashlib
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.error
 from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException, Request
+
 from database import db
-from models import TranslationRequest
+from models import (
+    SUPPORTED_TRANSLATION_LANGUAGES,
+    TranslationRequest,
+    UiTranslationRequest,
+)
 from rate_limit import public_limiter
- 
+
 router = APIRouter()
 
 
@@ -27,22 +33,24 @@ async def _translate_text(text: str, target_language: str, source_language: str)
     key = _cache_key(text, target_language, source)
     cached = await db.translation_cache.find_one({"key": key}, {"_id": 0})
     if cached:
-               return cached["translated_text"]
- 
+        return cached["translated_text"]
+
     # The provider call is blocking urllib; run it off the event loop.
     translated = await asyncio.to_thread(_call_translation_provider, text, target_language, source)
- 
+
     await db.translation_cache.update_one(
         {"key": key},
-        {"$set": {
-            "key": key,
-            "source_language": source,
-            "target_language": target_language,
-            "source_hash": hashlib.sha256(text.encode("utf-8")).hexdigest(),
-            "translated_text": translated,
-            "provider": os.environ.get("TRANSLATION_PROVIDER", "libretranslate"),
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        }},
+        {
+            "$set": {
+                "key": key,
+                "source_language": source,
+                "target_language": target_language,
+                "source_hash": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                "translated_text": translated,
+                "provider": os.environ.get("TRANSLATION_PROVIDER", "libretranslate"),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
         upsert=True,
     )
     return translated
@@ -96,7 +104,7 @@ def _call_deepl(text: str, target_language: str, source_language: str) -> str:
     if source_language and source_language != "auto":
         data["source_lang"] = source_language.upper()
 
-    encoded = urllib.parse.urlencode({k: v for k, v in data.items() if v}).encode("utf-8")
+    encoded = urllib.parse.urlencode({key: value for key, value in data.items() if value}).encode("utf-8")
     req = urllib.request.Request(api_url, data=encoded, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
@@ -131,36 +139,90 @@ def _post_json_for_translation(url: str, payload: dict, response_field: str) -> 
     if translated is None:
         raise HTTPException(status_code=502, detail="Translation provider returned no translation")
     return translated
-<<<<<<< HEAD
 
 
-=======
- 
->>>>>>> e4aa00c3aeb2ca7a59928bf79fede0aeb00d49d8
-@router.post("/translate/post")
-async def translate_post(req: TranslationRequest, request: Request):
-    public_limiter.check(request, "translate", maximum=20, window_seconds=60)
-    source_language = req.source_language or "auto"
+def _post_is_translatable(post: dict) -> bool:
+    if post.get("is_public") is False:
+        return False
+
+    expires_at = post.get("expires_at")
+    if not expires_at:
+        return True
+
+    try:
+        expires = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
+        if expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return False
+    return expires > datetime.now(timezone.utc)
+
+
+def _post_source_language(requested: str | None, post: dict) -> str:
+    source = requested if requested and requested != "auto" else post.get("language")
+    if source in SUPPORTED_TRANSLATION_LANGUAGES:
+        return source
+    return "auto"
+
+
+@router.post("/translate/ui")
+async def translate_ui(req: UiTranslationRequest, request: Request = None):
+    if request is not None:
+        public_limiter.check(request, "translate-ui", maximum=20, window_seconds=60)
+    source_language = req.source_language
     if source_language == req.target_language:
         return {
-            "title": req.title,
-            "excerpt": req.excerpt,
-            "content": req.content,
+            "translations": req.texts,
             "source_language": source_language,
             "target_language": req.target_language,
             "machine_translated": False,
         }
 
-    translated_title = await _translate_text(req.title or "", req.target_language, source_language)
-    translated_excerpt = await _translate_text(req.excerpt or "", req.target_language, source_language)
-    translated_content = await _translate_text(req.content, req.target_language, source_language)
+    translated_by_text = {}
+    for text in dict.fromkeys(req.texts):
+        translated_by_text[text] = await _translate_text(text, req.target_language, source_language)
+
+    return {
+        "translations": [translated_by_text[text] for text in req.texts],
+        "source_language": source_language,
+        "target_language": req.target_language,
+        "machine_translated": True,
+    }
+
+
+@router.post("/translate/post")
+async def translate_post(req: TranslationRequest, request: Request = None):
+    if request is not None:
+        public_limiter.check(request, "translate-post", maximum=20, window_seconds=60)
+    post = await db.posts.find_one(
+        {"id": req.post_id},
+        {"_id": 0, "title": 1, "excerpt": 1, "content": 1, "language": 1, "expires_at": 1, "is_public": 1},
+    )
+    if not post or not _post_is_translatable(post):
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    source_language = _post_source_language(req.source_language, post)
+    target_language = req.target_language
+    if source_language == target_language:
+        return {
+            "title": post["title"],
+            "excerpt": post.get("excerpt", ""),
+            "content": post["content"],
+            "source_language": source_language,
+            "target_language": target_language,
+            "machine_translated": False,
+        }
+
+    translated_title = await _translate_text(post["title"], target_language, source_language)
+    translated_excerpt = await _translate_text(post.get("excerpt", ""), target_language, source_language)
+    translated_content = await _translate_text(post["content"], target_language, source_language)
 
     return {
         "title": translated_title,
         "excerpt": translated_excerpt,
         "content": translated_content,
         "source_language": source_language,
-        "target_language": req.target_language,
+        "target_language": target_language,
         "machine_translated": True,
         "notice": "Machine translation provided for convenience. Original author language is the source version.",
     }

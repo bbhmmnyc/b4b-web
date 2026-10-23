@@ -1,0 +1,13 @@
+-r requirements.txt
+
+# Development and test tools. Runtime packages remain in requirements.txt.
+black==26.3.1
+flake8==7.3.0
+isort==7.0.0
+mypy==1.19.1
+pytest==9.0.3
+rich==14.3.2
+shellingham==1.5.4
+typer==0.21.1
+typer-slim==0.21.1
+watchfiles==1.1.1

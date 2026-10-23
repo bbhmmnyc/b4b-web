@@ -1,13 +1,13 @@
 export const LANGUAGES = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'es', name: 'Spanish', nativeName: 'Español' },
-  { code: 'fr', name: 'French', nativeName: 'Français' },
-  { code: 'pt', name: 'Portuguese', nativeName: 'Português' },
-  { code: 'de', name: 'German', nativeName: 'Deutsch' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
-  { code: 'zh', name: 'Chinese', nativeName: '中文' },
-  { code: 'ja', name: 'Japanese', nativeName: '日本語' },
+  { code: 'en', name: 'English', nativeName: 'English', locale: 'en-US', direction: 'ltr' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', locale: 'es-ES', direction: 'ltr' },
+  { code: 'fr', name: 'French', nativeName: 'Français', locale: 'fr-FR', direction: 'ltr' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', locale: 'pt-BR', direction: 'ltr' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch', locale: 'de-DE', direction: 'ltr' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', locale: 'hi-IN', direction: 'ltr' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', locale: 'ar', direction: 'rtl' },
+  { code: 'zh', name: 'Chinese', nativeName: '中文', locale: 'zh-CN', direction: 'ltr' },
+  { code: 'ja', name: 'Japanese', nativeName: '日本語', locale: 'ja-JP', direction: 'ltr' },
 ];
 
 export const DEFAULT_LANGUAGE = 'en';
@@ -34,6 +34,8 @@ export const UI_TEXT = {
     signInRegister: 'Sign In / Register',
     advertiseWithUs: 'Advertise With Us',
     terms: 'Terms & Conditions',
+    privacyPolicy: 'Privacy Policy',
+    cookiePolicy: 'Cookie Policy',
     posts: 'Posts',
     comments: 'Comments',
     contributors: 'Contributors',
@@ -76,6 +78,8 @@ export const UI_TEXT = {
     signInRegister: 'Iniciar sesión / Registrarse',
     advertiseWithUs: 'Anúnciate con nosotros',
     terms: 'Términos y condiciones',
+    privacyPolicy: 'Política de privacidad',
+    cookiePolicy: 'Política de cookies',
     posts: 'Publicaciones',
     comments: 'Comentarios',
     contributors: 'Colaboradores',
@@ -118,6 +122,8 @@ export const UI_TEXT = {
     signInRegister: 'Connexion / Inscription',
     advertiseWithUs: 'Annoncer avec nous',
     terms: 'Conditions générales',
+    privacyPolicy: 'Politique de confidentialité',
+    cookiePolicy: 'Politique relative aux cookies',
     posts: 'Articles',
     comments: 'Commentaires',
     contributors: 'Contributeurs',
@@ -160,6 +166,8 @@ export const UI_TEXT = {
     signInRegister: 'Entrar / Registrar',
     advertiseWithUs: 'Anuncie conosco',
     terms: 'Termos e condições',
+    privacyPolicy: 'Política de privacidade',
+    cookiePolicy: 'Política de cookies',
     posts: 'Posts',
     comments: 'Comentários',
     contributors: 'Colaboradores',
@@ -202,6 +210,8 @@ export const UI_TEXT = {
     signInRegister: 'Anmelden / Registrieren',
     advertiseWithUs: 'Bei uns werben',
     terms: 'Geschäftsbedingungen',
+    privacyPolicy: 'Datenschutzerklärung',
+    cookiePolicy: 'Cookie-Richtlinie',
     posts: 'Beiträge',
     comments: 'Kommentare',
     contributors: 'Mitwirkende',
@@ -223,6 +233,70 @@ export const UI_TEXT = {
     translationUnavailable: 'Übersetzung ist noch nicht konfiguriert. Fügen Sie einen Anbieter-Schlüssel hinzu.',
     originalLanguage: 'Originalsprache',
   },
+  hi: {
+    language: 'भाषा', home: 'होम', topics: 'विषय', regions: 'क्षेत्र',
+    viewAllRegions: 'सभी क्षेत्र देखें', viewAllTopics: 'सभी विषय देखें', about: 'हमारे बारे में',
+    advertise: 'विज्ञापन दें', donate: 'दान करें', write: 'लिखें', signIn: 'साइन इन', signOut: 'साइन आउट',
+    myDashboard: 'मेरा डैशबोर्ड', adminPanel: 'एडमिन पैनल', quickLinks: 'त्वरित लिंक', weeklyDigest: 'साप्ताहिक सारांश',
+    writePost: 'पोस्ट लिखें', signInRegister: 'साइन इन / रजिस्टर', advertiseWithUs: 'हमारे साथ विज्ञापन दें',
+    terms: 'नियम और शर्तें', privacyPolicy: 'गोपनीयता नीति', cookiePolicy: 'कुकी नीति', posts: 'पोस्ट',
+    comments: 'टिप्पणियाँ', contributors: 'योगदानकर्ता', countries: 'देश', basedInNyc: 'न्यूयॉर्क शहर में स्थित',
+    footerMission: 'दुनिया भर के मार्केटिंग पेशेवरों के लिए रणनीतियाँ, विचार और अनुभव साझा करने का एक खुला वैश्विक मंच।',
+    footerTagline: 'मार्केटिंग पेशेवर, मार्केटिंग पेशेवरों की मदद करते हुए।',
+    subscribeHint: 'हर सोमवार अपने इनबॉक्स में शीर्ष पोस्ट पाएँ।', subscribed: 'सदस्यता ली गई!',
+    shareThisPost: 'यह पोस्ट साझा करें', related: 'संबंधित', youMightAlsoLike: 'आपको यह भी पसंद आ सकता है',
+    sponsored: 'प्रायोजित', presentedBy: 'प्रस्तुतकर्ता', translatePost: 'पोस्ट का अनुवाद करें',
+    translating: 'अनुवाद हो रहा है...', showOriginal: 'मूल दिखाएँ',
+    machineTranslationNotice: 'सुविधा के लिए मशीन अनुवाद दिया गया है। लेखक की मूल भाषा वाला संस्करण स्रोत है।',
+    translationUnavailable: 'अनुवाद अभी कॉन्फ़िगर नहीं है। इसे सक्षम करने के लिए प्रदाता कुंजी जोड़ें।',
+    originalLanguage: 'मूल भाषा',
+  },
+  ar: {
+    language: 'اللغة', home: 'الرئيسية', topics: 'الموضوعات', regions: 'المناطق',
+    viewAllRegions: 'عرض كل المناطق', viewAllTopics: 'عرض كل الموضوعات', about: 'من نحن',
+    advertise: 'أعلن معنا', donate: 'تبرع', write: 'اكتب', signIn: 'تسجيل الدخول', signOut: 'تسجيل الخروج',
+    myDashboard: 'لوحتي', adminPanel: 'لوحة الإدارة', quickLinks: 'روابط سريعة', weeklyDigest: 'الملخص الأسبوعي',
+    writePost: 'اكتب منشورًا', signInRegister: 'تسجيل الدخول / إنشاء حساب', advertiseWithUs: 'أعلن معنا',
+    terms: 'الشروط والأحكام', privacyPolicy: 'سياسة الخصوصية', cookiePolicy: 'سياسة ملفات تعريف الارتباط',
+    posts: 'المنشورات', comments: 'التعليقات', contributors: 'المساهمون', countries: 'الدول', basedInNyc: 'مقرنا مدينة نيويورك',
+    footerMission: 'منتدى عالمي مفتوح يتيح لمحترفي التسويق مشاركة الاستراتيجيات والرؤى والتجارب من جميع أنحاء العالم.',
+    footerTagline: 'محترفو التسويق يساعدون محترفي التسويق.', subscribeHint: 'أفضل المنشورات في بريدك كل يوم اثنين.',
+    subscribed: 'تم الاشتراك!', shareThisPost: 'شارك هذا المنشور', related: 'ذات صلة', youMightAlsoLike: 'قد يعجبك أيضًا',
+    sponsored: 'برعاية', presentedBy: 'مقدم من', translatePost: 'ترجمة المنشور', translating: 'جارٍ الترجمة...',
+    showOriginal: 'عرض الأصل',
+    machineTranslationNotice: 'تم توفير ترجمة آلية للتسهيل. نسخة لغة المؤلف الأصلية هي المصدر.',
+    translationUnavailable: 'لم تتم تهيئة الترجمة بعد. أضف مفتاح مزود لتفعيلها.', originalLanguage: 'اللغة الأصلية',
+  },
+  zh: {
+    language: '语言', home: '首页', topics: '主题', regions: '地区', viewAllRegions: '查看所有地区',
+    viewAllTopics: '查看所有主题', about: '关于我们', advertise: '广告合作', donate: '捐赠', write: '撰写',
+    signIn: '登录', signOut: '退出登录', myDashboard: '我的控制台', adminPanel: '管理面板', quickLinks: '快捷链接',
+    weeklyDigest: '每周精选', writePost: '撰写文章', signInRegister: '登录 / 注册', advertiseWithUs: '与我们合作投放广告',
+    terms: '条款与条件', privacyPolicy: '隐私政策', cookiePolicy: 'Cookie 政策', posts: '文章', comments: '评论',
+    contributors: '贡献者', countries: '国家', basedInNyc: '总部位于纽约市',
+    footerMission: '一个面向全球营销专业人士的开放论坛，分享来自世界各地的策略、见解和经验。',
+    footerTagline: '营销专业人士互相帮助。', subscribeHint: '每周一将热门文章发送到您的邮箱。', subscribed: '订阅成功！',
+    shareThisPost: '分享这篇文章', related: '相关内容', youMightAlsoLike: '您可能还喜欢', sponsored: '赞助内容',
+    presentedBy: '由以下机构呈现', translatePost: '翻译文章', translating: '正在翻译...', showOriginal: '显示原文',
+    machineTranslationNotice: '机器翻译仅为方便阅读。作者原始语言版本为源版本。',
+    translationUnavailable: '翻译尚未配置。请添加翻译服务商密钥以启用此功能。', originalLanguage: '原始语言',
+  },
+  ja: {
+    language: '言語', home: 'ホーム', topics: 'トピック', regions: '地域', viewAllRegions: 'すべての地域を見る',
+    viewAllTopics: 'すべてのトピックを見る', about: '私たちについて', advertise: '広告掲載', donate: '寄付', write: '投稿',
+    signIn: 'ログイン', signOut: 'ログアウト', myDashboard: 'マイダッシュボード', adminPanel: '管理パネル',
+    quickLinks: 'クイックリンク', weeklyDigest: '週間ダイジェスト', writePost: '記事を書く',
+    signInRegister: 'ログイン / 登録', advertiseWithUs: '広告掲載について', terms: '利用規約',
+    privacyPolicy: 'プライバシーポリシー', cookiePolicy: 'Cookie ポリシー', posts: '記事', comments: 'コメント',
+    contributors: '投稿者', countries: '国', basedInNyc: 'ニューヨーク市を拠点に活動',
+    footerMission: '世界中のマーケティング専門家が戦略、知見、経験を共有するためのオープンなグローバルフォーラムです。',
+    footerTagline: 'マーケティング専門家が互いに助け合う場所。', subscribeHint: '毎週月曜日に注目記事をお届けします。',
+    subscribed: '登録しました！', shareThisPost: 'この記事を共有', related: '関連記事', youMightAlsoLike: 'こちらもおすすめ',
+    sponsored: 'スポンサー', presentedBy: '提供', translatePost: '記事を翻訳', translating: '翻訳中...', showOriginal: '原文を表示',
+    machineTranslationNotice: '便宜上、機械翻訳を提供しています。著者が執筆した元の言語版が原文です。',
+    translationUnavailable: '翻訳はまだ設定されていません。有効にするには翻訳サービスのキーを追加してください。',
+    originalLanguage: '元の言語',
+  },
 };
 
 export function getLanguage(code) {
@@ -231,4 +305,15 @@ export function getLanguage(code) {
 
 export function translateUi(language, key) {
   return UI_TEXT[language]?.[key] || UI_TEXT.en[key] || key;
+}
+
+const UI_TRANSLATION_SETS = new Map();
+
+export function isKnownUiTranslation(language, value) {
+  const normalized = value?.trim();
+  if (!normalized) return false;
+  if (!UI_TRANSLATION_SETS.has(language)) {
+    UI_TRANSLATION_SETS.set(language, new Set(Object.values(UI_TEXT[language] || {})));
+  }
+  return UI_TRANSLATION_SETS.get(language).has(normalized);
 }

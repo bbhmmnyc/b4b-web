@@ -3,9 +3,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Eye, MapPin, Clock, ArrowRight, Timer } from 'lucide-react';
 import { getCategoryColor } from '../utils/colors';
+import { useApp } from '../context/AppContext';
+import { getLanguage } from '../i18n';
 
 export default function BlogCard({ post, index = 0 }) {
-  const timeAgo = getTimeAgo(post.created_at);
+  const { language } = useApp();
+  const timeAgo = getTimeAgo(post.created_at, getLanguage(language).locale);
   const daysLeft = post.expires_at ? getDaysLeft(post.expires_at) : null;
   const catColor = getCategoryColor(post.category_slug);
 
@@ -86,10 +89,10 @@ export default function BlogCard({ post, index = 0 }) {
               {post.author_name?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
-              <p className="text-xs font-semibold" style={{ color: '#1A4040' }}>{post.author_name}</p>
+              <p className="text-xs font-semibold" style={{ color: '#1A4040' }} translate="no">{post.author_name}</p>
               <div className="flex items-center gap-1 text-[10px]" style={{ color: '#26384A' }}>
                 <MapPin className="w-2.5 h-2.5" />
-                <span>{post.author_city}, {post.author_country}</span>
+                <span translate="no">{post.author_city}, {post.author_country}</span>
               </div>
             </div>
           </div>
@@ -106,7 +109,7 @@ export default function BlogCard({ post, index = 0 }) {
               <span className="flex items-center gap-1">
                 <Eye className="w-3 h-3" />{post.views || 0}
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1" data-no-site-translate>
                 <Clock className="w-3 h-3" />{timeAgo}
               </span>
             </div>
@@ -120,15 +123,16 @@ export default function BlogCard({ post, index = 0 }) {
   );
 }
 
-function getTimeAgo(dateStr) {
+function getTimeAgo(dateStr, locale) {
   const now = new Date();
   const date = new Date(dateStr);
   const diff = Math.floor((now - date) / 1000);
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  if (diff < 60) return formatter.format(0, 'second');
+  if (diff < 3600) return formatter.format(-Math.floor(diff / 60), 'minute');
+  if (diff < 86400) return formatter.format(-Math.floor(diff / 3600), 'hour');
+  if (diff < 604800) return formatter.format(-Math.floor(diff / 86400), 'day');
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }
 
 function getDaysLeft(expiresAt) {
