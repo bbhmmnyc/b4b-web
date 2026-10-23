@@ -107,46 +107,46 @@ async def translate_post(req: TranslationRequest, request: Request):
             "target_language": target_language, 
             "cached": False
     }
-# Check cache first
-cached = await _get_cached(req.post_id, target_language)
-if cached:
-    return {
-        "title": cached["translated_text"]["title"],
-        "excerpt": cached["translated_text"].get("excerpt", ""),
-        "content": cached["translated_text"]["content"],
-        "source_language": source_language,
-        "target_language": target_language,
-        "cached": True
+    # Check cache first
+    cached = await _get_cached(req.post_id, target_language)
+    if cached:
+        return {
+            "title": cached["translated_text"]["title"],
+            "excerpt": cached["translated_text"].get("excerpt", ""),
+            "content": cached["translated_text"]["content"],
+            "source_language": source_language,
+            "target_language": target_language,
+            "cached": True
+        }
+
+    # Translate each field (blocking call off the event loop)
+    try:
+        translated_title = await asyncio.to_thread(
+            _call_translation_provider, post["title"], target_language, source_language
+        )
+        translated_excerpt = await asyncio.to_thread(
+            _call_translation_provider, post.get("excerpt", ""), target_language, source_language
+        ) if post.get("excerpt") else "" 
+        translated_content = await asyncio.to_thread(
+            _call_translation_provider, post["content"], target_language, source_language
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=502, detail="Translation failed")
+
+    translated = {
+        "title": translated_title,
+        "excerpt": translated_excerpt,
+        "content": translated_content
     }
+    await _set_cache(req.post_id, target_language, translated, post["content"])
 
-# Translate each field (blocking call off the event loop)
-try:
-    translated_title = await asyncio.to_thread(
-        _call_translation_provider, post["title"], target_language, source_language
-    )
-    translated_excerpt = await asyncio.to_thread(
-        _call_translation_provider, post.get("excerpt", ""), target_language, source_language
-    ) if post.get("excerpt") else "" 
-    translated_content = await asyncio.to_thread(
-        _call_translation_provider, post["content"], target_language, source_language
-    )
-except HTTPException:
-    raise
-except Exception:
-    raise HTTPException(status_code=502, detail="Translation failed")
-
-translated = {
-"title": translated_title,
-"excerpt": translated_excerpt,
-"content": translated_content
-}
-await _set_cache(req.post_id, target_language, translated, post["content"])
-
-return {
-    "title": translated_title, 
-    "excerpt": translated_excerpt, 
-    "content": translated_content, 
-    "source_language": source_language, 
-    "target_language": target_language, 
-    "cached": False
-}
+    return {
+        "title": translated_title, 
+        "excerpt": translated_excerpt, 
+        "content": translated_content, 
+        "source_language": source_language, 
+        "target_language": target_language, 
+        "cached": False
+    }
