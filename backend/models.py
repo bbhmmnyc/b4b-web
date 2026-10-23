@@ -221,3 +221,7 @@ class AdInquiry(BaseModel):
     budget_range: Optional[str] = Field(default=None, max_length=80)
     message: str = Field(..., min_length=10, max_length=5000)
     preferred_categories: List[str] = Field(default_factory=list, max_length=20)
+
+class EmailPrefsUpdate(BaseModel):
+    email_new_posts: bool = True
+    email_digest: bool = True
